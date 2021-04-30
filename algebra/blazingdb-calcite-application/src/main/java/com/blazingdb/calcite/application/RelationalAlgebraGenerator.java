@@ -188,47 +188,66 @@ public class RelationalAlgebraGenerator {
 			// with constant values like  LEAD($1, 5)
 			if (RelOptUtil.toString(nonOptimizedPlan).indexOf("OVER") != -1) {
 				program = new HepProgramBuilder()
-					      //.addRuleInstance(ProjectToWindowRule.PROJECT)
-						  .addRuleInstance(AggregateExpandDistinctAggregatesRule.JOIN)
-						  .addRuleInstance(FilterAggregateTransposeRule.INSTANCE)
-						  .addRuleInstance(FilterJoinRule.JoinConditionPushRule.FILTER_ON_JOIN)
-						  .addRuleInstance(FilterJoinRule.JoinConditionPushRule.JOIN)
-						  .addRuleInstance(ProjectMergeRule.INSTANCE)
-						  .addRuleInstance(FilterMergeRule.INSTANCE)
-						  //.addRuleInstance(ProjectJoinTransposeRule.INSTANCE)
-						  .addRuleInstance(ProjectFilterTransposeRule.INSTANCE)
+						//.addRuleInstance(ProjectToWindowRule.PROJECT)
+//						  .addRuleInstance(AggregateExpandDistinctAggregatesRule.JOIN)
+						.addRuleInstance(CoreRules.AGGREGATE_EXPAND_DISTINCT_AGGREGATES)
+//						  .addRuleInstance(FilterAggregateTransposeRule.INSTANCE)
+						.addRuleInstance(CoreRules.FILTER_AGGREGATE_TRANSPOSE)
+//						  .addRuleInstance(FilterJoinRule.JoinConditionPushRule.FILTER_ON_JOIN)
+						.addRuleInstance(CoreRules.FILTER_INTO_JOIN)
+//						  .addRuleInstance(FilterJoinRule.JoinConditionPushRule.JOIN)
+						.addRuleInstance(CoreRules.JOIN_CONDITION_PUSH)
+//						  .addRuleInstance(ProjectMergeRule.INSTANCE)
+						.addRuleInstance(CoreRules.PROJECT_MERGE)
+//						  .addRuleInstance(FilterMergeRule.INSTANCE)
+						.addRuleInstance(CoreRules.FILTER_MERGE)
+						//.addRuleInstance(ProjectJoinTransposeRule.INSTANCE)
+						.addRuleInstance(ProjectFilterTransposeRule.INSTANCE)
 
-						  //The following three rules evaluate expressions in Projects and Filters
-						  //.addRuleInstance(ReduceExpressionsRule.PROJECT_INSTANCE)
-						  .addRuleInstance(ReduceExpressionsRule.FILTER_INSTANCE)
+						//The following three rules evaluate expressions in Projects and Filters
+						//.addRuleInstance(ReduceExpressionsRule.PROJECT_INSTANCE)
+//						  .addRuleInstance(ReduceExpressionsRule.FILTER_INSTANCE)
+						.addRuleInstance(CoreRules.FILTER_REDUCE_EXPRESSIONS)
 
-						  .addRuleInstance(ProjectTableScanRule.INSTANCE)
-						  .addRuleInstance(FilterTableScanRule.INSTANCE)
-						  .addRuleInstance(FilterRemoveIsNotDistinctFromRule.INSTANCE)
-						  .addRuleInstance(AggregateReduceFunctionsRule.INSTANCE)
-						  .build();
+						.addRuleInstance(ProjectTableScanRule.INSTANCE)
+						.addRuleInstance(FilterTableScanRule.INSTANCE)
+//						  .addRuleInstance(FilterRemoveIsNotDistinctFromRule.INSTANCE)
+						.addRuleInstance(CoreRules.FILTER_EXPAND_IS_NOT_DISTINCT_FROM)
+//						  .addRuleInstance(AggregateReduceFunctionsRule.INSTANCE)
+						.addRuleInstance(CoreRules.AGGREGATE_REDUCE_FUNCTIONS)
+						.build();
 			} else {
 				program = new HepProgramBuilder()
-						  //.addRuleInstance(ProjectToWindowRule.PROJECT)
-						  .addRuleInstance(AggregateExpandDistinctAggregatesRule.JOIN)
-						  .addRuleInstance(FilterAggregateTransposeRule.INSTANCE)
-						  .addRuleInstance(FilterJoinRule.JoinConditionPushRule.FILTER_ON_JOIN)
-						  .addRuleInstance(FilterJoinRule.JoinConditionPushRule.JOIN)
-						  .addRuleInstance(ProjectMergeRule.INSTANCE)
-						  .addRuleInstance(FilterMergeRule.INSTANCE)
-						  .addRuleInstance(ProjectJoinTransposeRule.INSTANCE)
-						  .addRuleInstance(ProjectTableScanRule.INSTANCE)
-						  .addRuleInstance(ProjectFilterTransposeRule.INSTANCE)
+						//.addRuleInstance(ProjectToWindowRule.PROJECT)
+//						  .addRuleInstance(AggregateExpandDistinctAggregatesRule.JOIN)
+						.addRuleInstance(CoreRules.AGGREGATE_EXPAND_DISTINCT_AGGREGATES)
+//						  .addRuleInstance(FilterAggregateTransposeRule.INSTANCE)
+						.addRuleInstance(CoreRules.FILTER_AGGREGATE_TRANSPOSE)
+//						  .addRuleInstance(FilterJoinRule.JoinConditionPushRule.FILTER_ON_JOIN)
+						.addRuleInstance(CoreRules.FILTER_INTO_JOIN)
+//						  .addRuleInstance(FilterJoinRule.JoinConditionPushRule.JOIN)
+						.addRuleInstance(CoreRules.JOIN_CONDITION_PUSH)
+//						  .addRuleInstance(ProjectMergeRule.INSTANCE)
+						.addRuleInstance(CoreRules.PROJECT_MERGE)
+//						  .addRuleInstance(FilterMergeRule.INSTANCE)
+						.addRuleInstance(CoreRules.FILTER_MERGE)
+//						  .addRuleInstance(ProjectJoinTransposeRule.INSTANCE)
+						.addRuleInstance(CoreRules.PROJECT_JOIN_TRANSPOSE)
+						.addRuleInstance(ProjectFilterTransposeRule.INSTANCE)
 
-						  //The following three rules evaluate expressions in Projects and Filters
-						  .addRuleInstance(ReduceExpressionsRule.PROJECT_INSTANCE)
-						  .addRuleInstance(ReduceExpressionsRule.FILTER_INSTANCE)
+						//The following three rules evaluate expressions in Projects and Filters
+//						  .addRuleInstance(ReduceExpressionsRule.PROJECT_INSTANCE)
+						.addRuleInstance(CoreRules.PROJECT_REDUCE_EXPRESSIONS)
+//						  .addRuleInstance(ReduceExpressionsRule.FILTER_INSTANCE)
+						.addRuleInstance(CoreRules.FILTER_REDUCE_EXPRESSIONS)
 
-						  .addRuleInstance(ProjectTableScanRule.INSTANCE)
-						  .addRuleInstance(FilterTableScanRule.INSTANCE)
-						  .addRuleInstance(FilterRemoveIsNotDistinctFromRule.INSTANCE)
-						  .addRuleInstance(AggregateReduceFunctionsRule.INSTANCE)
-						  .build();
+						.addRuleInstance(ProjectTableScanRule.INSTANCE)
+						.addRuleInstance(FilterTableScanRule.INSTANCE)
+//						  .addRuleInstance(FilterRemoveIsNotDistinctFromRule.INSTANCE)
+						.addRuleInstance(CoreRules.FILTER_EXPAND_IS_NOT_DISTINCT_FROM)
+//						  .addRuleInstance(AggregateReduceFunctionsRule.INSTANCE)
+						.addRuleInstance(CoreRules.AGGREGATE_REDUCE_FUNCTIONS)
+						.build();
 			}
 		} else {
 			HepProgramBuilder programBuilder = new HepProgramBuilder();
@@ -258,7 +277,7 @@ public class RelationalAlgebraGenerator {
 			planner.addRule(Bindables.BINDABLE_JOIN_RULE);
 			planner.addRule(Bindables.BINDABLE_PROJECT_RULE);
 			planner.addRule(Bindables.BINDABLE_SORT_RULE);
-			planner.addRule(JoinAssociateRule.INSTANCE);
+			planner.addRule(JoinAssociateRule.Config.DEFAULT.toRule());
 		} else {
 			for(RelOptRule ruleCBO : rulesCBO) {
 				planner.addRule(ruleCBO);

@@ -201,7 +201,7 @@ public class BlazingRulesTest {
 		checkTable(schema, "customer");
 		checkTable(schema, "orders");
 
-		RelNode nonOptimizedPlan;
+		RelNode nonOptimizedPlanTmp;
 		RelNode optimizedPlan;
 		RelNode optimizedPlanCBO;
 
@@ -211,23 +211,23 @@ public class BlazingRulesTest {
 
 		List<List<RelOptRule>> rulesCBOSet = new ArrayList<List<RelOptRule>>();
 
-		List<RelOptRule> rules1 = Arrays.asList(ProjectFilterTransposeRule.INSTANCE,
-				FilterJoinRule.JoinConditionPushRule.FILTER_ON_JOIN,
-				FilterJoinRule.JoinConditionPushRule.JOIN,
-				ProjectMergeRule.INSTANCE,
-				FilterMergeRule.INSTANCE,
-				ProjectJoinTransposeRule.INSTANCE,
-				ProjectTableScanRule.INSTANCE);
+		List<RelOptRule> rules1 = Arrays.asList(ProjectFilterTransposeRule.Config.DEFAULT.toRule(),
+				FilterJoinRule.JoinConditionPushRule.Config.DEFAULT.toRule(),
+				FilterJoinRule.JoinConditionPushRule.Config.DEFAULT.toRule(),
+				ProjectMergeRule.Config.DEFAULT.toRule(),
+				FilterMergeRule.Config.DEFAULT.toRule(),
+				ProjectJoinTransposeRule.Config.DEFAULT.toRule(),
+				ProjectTableScanRule.Config.DEFAULT.toRule());
 
 		rulesSet.add(rules1);
 
-		List<RelOptRule> rules2 = Arrays.asList(FilterJoinRule.JoinConditionPushRule.FILTER_ON_JOIN,
-				FilterJoinRule.JoinConditionPushRule.JOIN,
-				ProjectMergeRule.INSTANCE,
-				FilterMergeRule.INSTANCE,
-				ProjectJoinTransposeRule.INSTANCE,
-				ProjectFilterTransposeRule.INSTANCE,
-				ProjectTableScanRule.INSTANCE);
+		List<RelOptRule> rules2 = Arrays.asList(FilterJoinRule.JoinConditionPushRule.Config.DEFAULT.toRule(),
+				FilterJoinRule.JoinConditionPushRule.Config.DEFAULT.toRule(),
+				ProjectMergeRule.Config.DEFAULT.toRule(),
+				FilterMergeRule.Config.DEFAULT.toRule(),
+				ProjectJoinTransposeRule.Config.DEFAULT.toRule(),
+				ProjectFilterTransposeRule.Config.DEFAULT.toRule(),
+				ProjectTableScanRule.Config.DEFAULT.toRule());
 
 		rulesSet.add(rules2);
 
@@ -237,7 +237,7 @@ public class BlazingRulesTest {
 				Bindables.BINDABLE_JOIN_RULE,
 				Bindables.BINDABLE_PROJECT_RULE,
 				Bindables.BINDABLE_SORT_RULE,
-				JoinAssociateRule.INSTANCE
+				JoinAssociateRule.Config.DEFAULT.toRule()
 		);
 
 		rulesCBOSet.add(rules3);
@@ -249,7 +249,8 @@ public class BlazingRulesTest {
 //					"select l.l_orderkey, l.l_partkey, l.l_suppkey, l.l_linenumber" +
 //							" from lineitem l, supplier s, part p " +
 //							" where l.l_suppkey = s.s_suppkey and  l.l_partkey=p.p_partkey";
-			nonOptimizedPlan = algebraGen.getNonOptimizedRelationalAlgebra(sql);
+//			nonOptimizedPlan = algebraGen.getNonOptimizedRelationalAlgebra(sql);
+			RelNode nonOptimizedPlan = algebraGen.getNonOptimizedRelationalAlgebra(sql);
 			System.out.println("non optimized\n");
 //			System.out.println(RelOptUtil.toString(nonOptimizedPlan) + "\n");
 			System.out.println(RelOptUtil.toString(nonOptimizedPlan, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
@@ -292,23 +293,23 @@ public class BlazingRulesTest {
 
 		List<List<RelOptRule>> rulesSet = new ArrayList<List<RelOptRule>>();
 
-		List<RelOptRule> rules1 = Arrays.asList(ProjectFilterTransposeRule.INSTANCE,
-			FilterJoinRule.JoinConditionPushRule.FILTER_ON_JOIN,
-			FilterJoinRule.JoinConditionPushRule.JOIN,
-			ProjectMergeRule.INSTANCE,
-			FilterMergeRule.INSTANCE,
-			ProjectJoinTransposeRule.INSTANCE,
-			ProjectTableScanRule.INSTANCE);
+		List<RelOptRule> rules1 = Arrays.asList(ProjectFilterTransposeRule.Config.DEFAULT.toRule(),
+			FilterJoinRule.JoinConditionPushRule.Config.DEFAULT.toRule(),
+			FilterJoinRule.JoinConditionPushRule.Config.DEFAULT.toRule(),
+			ProjectMergeRule.Config.DEFAULT.toRule(),
+			FilterMergeRule.Config.DEFAULT.toRule(),
+			ProjectJoinTransposeRule.Config.DEFAULT.toRule(),
+			ProjectTableScanRule.Config.DEFAULT.toRule());
 
 		rulesSet.add(rules1);
 
-		List<RelOptRule> rules2 = Arrays.asList(FilterJoinRule.JoinConditionPushRule.FILTER_ON_JOIN,
-			FilterJoinRule.JoinConditionPushRule.JOIN,
-			ProjectMergeRule.INSTANCE,
-			FilterMergeRule.INSTANCE,
-			ProjectJoinTransposeRule.INSTANCE,
-			ProjectFilterTransposeRule.INSTANCE,
-			ProjectTableScanRule.INSTANCE);
+		List<RelOptRule> rules2 = Arrays.asList(FilterJoinRule.JoinConditionPushRule.Config.DEFAULT.toRule(),
+			FilterJoinRule.JoinConditionPushRule.Config.DEFAULT.toRule(),
+			ProjectMergeRule.Config.DEFAULT.toRule(),
+			FilterMergeRule.Config.DEFAULT.toRule(),
+			ProjectJoinTransposeRule.Config.DEFAULT.toRule(),
+			ProjectFilterTransposeRule.Config.DEFAULT.toRule(),
+			ProjectTableScanRule.Config.DEFAULT.toRule());
 
 		rulesSet.add(rules2);
 

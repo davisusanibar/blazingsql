@@ -481,8 +481,11 @@ public class PushProjector {
 		// creating map of aliases and column refs
 		HashMap<Integer, String> fieldsMap = new HashMap<Integer, String>();
 		for(int i = 0; i < nInputRefs; i++) {
-			if(i < origProj.getChildExps().size()) {
-				fieldsMap.put(origProj.getChildExps().get(i).hashCode(), fieldNames.get(i));
+//			if(i < origProj.getChildExps().size()) {
+//				fieldsMap.put(origProj.getChildExps().get(i).hashCode(), fieldNames.get(i));
+//			getChildExps methods deprecated: https://issues.apache.org/jira/browse/CALCITE-479
+			if(i < ((Project) origProj).getProjects().size()) {
+				fieldsMap.put(((Project) origProj).getProjects().get(i).hashCode(), fieldNames.get(i));
 			}
 		}
 
@@ -570,9 +573,11 @@ public class PushProjector {
 	for (int i = 0; i < nInputRefs; i++) {
 		if (i < total_projected_columns) {
 			if (!rightSide) {
-				fieldsMap.put(origProj.getChildExps().get(i).hashCode(), fieldNames.get(i));
+//				fieldsMap.put(origProj.getChildExps().get(i).hashCode(), fieldNames.get(i));
+				fieldsMap.put(origProj.getProjects().get(i).hashCode(), fieldNames.get(i));
 			} else {
-				fieldsMap.put(origProj.getChildExps().get(left_total_columns + i).hashCode(), fieldNames.get(left_total_columns + i));
+//				fieldsMap.put(origProj.getChildExps().get(left_total_columns + i).hashCode(), fieldNames.get(left_total_columns + i));
+				fieldsMap.put(origProj.getProjects().get(left_total_columns + i).hashCode(), fieldNames.get(left_total_columns + i));
 			}
 		}
 	}
