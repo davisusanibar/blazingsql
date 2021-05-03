@@ -201,7 +201,7 @@ public class BlazingRulesTest {
 		checkTable(schema, "customer");
 		checkTable(schema, "orders");
 
-		RelNode nonOptimizedPlanTmp;
+		RelNode nonOptimizedPlan;
 		RelNode optimizedPlan;
 		RelNode optimizedPlanCBO;
 
@@ -245,12 +245,12 @@ public class BlazingRulesTest {
 		for(List<RelOptRule> rules : rulesSet) {
 			System.out.println("<*****************************************************************************>");
 			String sql =
-					"select c_custkey from `customer` inner join `orders` on c_custkey = o_custkey where c_custkey < 1000";
-//					"select l.l_orderkey, l.l_partkey, l.l_suppkey, l.l_linenumber" +
-//							" from lineitem l, supplier s, part p " +
-//							" where l.l_suppkey = s.s_suppkey and  l.l_partkey=p.p_partkey";
-//			nonOptimizedPlan = algebraGen.getNonOptimizedRelationalAlgebra(sql);
-			RelNode nonOptimizedPlan = algebraGen.getNonOptimizedRelationalAlgebra(sql);
+//					"select c_custkey from `customer` inner join `orders` on c_custkey = o_custkey where c_custkey < 1000";
+					"select l.l_orderkey, l.l_partkey, l.l_suppkey, l.l_linenumber" +
+							" from lineitem l, supplier s, part p " +
+							" where l.l_suppkey = s.s_suppkey and  l.l_partkey=p.p_partkey";
+			nonOptimizedPlan = algebraGen.getNonOptimizedRelationalAlgebra(sql);
+
 			System.out.println("non optimized\n");
 //			System.out.println(RelOptUtil.toString(nonOptimizedPlan) + "\n");
 			System.out.println(RelOptUtil.toString(nonOptimizedPlan, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
