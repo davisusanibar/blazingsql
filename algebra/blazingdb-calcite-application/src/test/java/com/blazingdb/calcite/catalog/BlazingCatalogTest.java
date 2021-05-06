@@ -235,7 +235,7 @@ public class BlazingCatalogTest {
 		columns.add(column2);
 		columns.add(column3);
 
-		CatalogTableImpl table = new CatalogTableImpl("table1", db, columns);
+		CatalogTableImpl table = new CatalogTableImpl("table1", db, columns, 10.0);
 
 		db.addTable(table);
 		repo.updateDatabase(db);
