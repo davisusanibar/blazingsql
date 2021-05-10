@@ -1006,9 +1006,11 @@ class BlazingTable(object):
         row_groups_ids=[],
         local_files=False,
         mapping_files={},
+        row_count=None,
     ):
         # row_groups_ids, vector<vector<int>> one vector
         # of row_groups per file
+        self.row_count = row_count
         self.name = name
         self.fileType = fileType
         if fileType == DataType.ARROW:
@@ -2401,6 +2403,7 @@ class BlazingContext(object):
                 local_files=local_files,
                 mapping_files=parsed_mapping_files,
             )
+            table.row_count = parsedSchema["row_count"]
 
             if is_hive_input:
                 # table.column_names are the official schema column_names
@@ -2515,7 +2518,6 @@ class BlazingContext(object):
             table = BlazingTable(
                 table_name, input, DataType.DASK_CUDF, client=self.dask_client
             )
-
         if "from_sql" in kwargs:
             sqlEngineName = kwargs["from_sql"]
 
@@ -2539,6 +2541,7 @@ class BlazingContext(object):
             )
             table.column_names = parsedSchema["names"]
             table.column_types = parsedSchema["types"]
+            table.row_count = parsedSchema["row_count"]
 
         if table is not None:
             self.add_remove_table(table_name, True, table)

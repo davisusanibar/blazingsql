@@ -68,6 +68,12 @@ public:
 		size_t file_index,
 		bool is_in_file = true);
 
+    void add_column_and_rowcount(std::string name,
+                    cudf::type_id type,
+                    size_t file_index,
+                    bool is_in_file = true,
+                    size_t row_count);
+
 	std::unique_ptr<ral::frame::BlazingTable> makeEmptyBlazingTable(const std::vector<int> & column_indices) const;
 
 	inline bool operator==(const Schema & rhs) const {

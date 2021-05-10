@@ -100,7 +100,7 @@ void parquet_parser::parse_schema(
 		size_t file_index = i;
 		bool is_in_file = true;
 		std::string name = table_out.metadata.column_names.at(i);
-		schema.add_column(name, type, file_index, is_in_file);
+		schema.add_column_and_rowcount(name, type, file_index, is_in_file, parquet_reader->metadata()->num_rows());
 	}
 }
 
