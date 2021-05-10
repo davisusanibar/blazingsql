@@ -87,6 +87,14 @@ void Schema::add_column(std::string name, cudf::type_id type, size_t file_index,
 	this->in_file.push_back(is_in_file);
 }
 
+void Schema::add_column_and_rowcount(std::string name, cudf::type_id type, size_t file_index, bool is_in_file, size_t row_count) {
+    this->names.push_back(name);
+    this->types.push_back(type);
+    this->calcite_to_file_indices.push_back(file_index);
+    this->in_file.push_back(is_in_file);
+    this->row_count = row_count;
+}
+
 void Schema::add_file(std::string file){
 	this->files.push_back(file);
 }

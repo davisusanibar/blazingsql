@@ -90,6 +90,7 @@ private:
 	std::vector<std::string> files;
 	std::vector<std::vector<int>> row_groups_ids;
 	bool has_header_csv = false;
+	size_t row_count;
 };
 
 } /* namespace io */
