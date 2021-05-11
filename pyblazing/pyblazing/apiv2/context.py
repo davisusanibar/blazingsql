@@ -1916,6 +1916,9 @@ class BlazingContext(object):
                     column = ColumnClass(column, dataType, order)
                     arr.add(column)
                 # tableJava = TableClass(tableName, self.db, arr, len(table))
+                print("antes de llamar a java")
+                print(table.num_rows)
+                print(table.num_rows)
                 tableJava = TableClass(tableName, self.db, arr, table.num_rows)
                 self.db.addTable(tableJava)
                 self.schema = BlazingSchemaClass(self.db)
@@ -2405,6 +2408,7 @@ class BlazingContext(object):
             )
             print(parsedSchema["row_count"])
             table.row_count = parsedSchema["row_count"]
+            print("asigno nuero columnas")
 
             if is_hive_input:
                 # table.column_names are the official schema column_names
@@ -2544,6 +2548,7 @@ class BlazingContext(object):
             table.column_types = parsedSchema["types"]
             print(parsedSchema["row_count"])
             table.row_count = parsedSchema["row_count"]
+            print("asigno nuero columnas v2")
 
         if table is not None:
             self.add_remove_table(table_name, True, table)
