@@ -1917,9 +1917,8 @@ class BlazingContext(object):
                     arr.add(column)
                 # tableJava = TableClass(tableName, self.db, arr, len(table))
                 print("antes de llamar a java")
-                print(table.num_rows)
-                print(table.num_rows)
-                tableJava = TableClass(tableName, self.db, arr, table.num_rows)
+                print(table.args["row_count"])
+                tableJava = TableClass(tableName, self.db, arr, table.args["row_count"])
                 self.db.addTable(tableJava)
                 self.schema = BlazingSchemaClass(self.db)
                 self.generator = RelationalAlgebraGeneratorClass(self.schema)
@@ -2408,7 +2407,9 @@ class BlazingContext(object):
             )
             print(parsedSchema["row_count"])
             table.row_count = parsedSchema["row_count"]
+            table.args["row_count"] = parsedSchema["row_count"]
             print("asigno nuero columnas")
+            print("es: " + table.args["row_count"])
 
             if is_hive_input:
                 # table.column_names are the official schema column_names
@@ -2548,6 +2549,7 @@ class BlazingContext(object):
             table.column_types = parsedSchema["types"]
             print(parsedSchema["row_count"])
             table.row_count = parsedSchema["row_count"]
+            table.args["row_count"] = parsedSchema["row_count"]
             print("asigno nuero columnas v2")
 
         if table is not None:
