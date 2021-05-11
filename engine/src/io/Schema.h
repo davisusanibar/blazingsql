@@ -36,8 +36,7 @@ public:
            std::vector<size_t> calcite_to_file_indices,
            std::vector<cudf::type_id> types,
            std::vector<bool> in_file,
-           std::vector<std::vector<int>> row_groups_ids = {},
-           std::vector<size_t> row_count
+           std::vector<std::vector<int>> row_groups_ids = {}
            );
 
 	Schema(std::vector<std::string> names, std::vector<cudf::type_id> types);
@@ -69,18 +68,15 @@ public:
 	bool get_has_header_csv() const;
 	void set_has_header_csv(bool has_header);
 
+    bool get_row_count() const;
+    void set_row_count(size_t row_count);
+
 	void add_file(std::string file);
 
 	void add_column(std::string name,
 		cudf::type_id type,
 		size_t file_index,
 		bool is_in_file = true);
-
-    void add_column_and_rowcount(std::string name,
-                    cudf::type_id type,
-                    size_t file_index,
-                    bool is_in_file = true,
-                    std::vector<size_t> row_count);
 
 	std::unique_ptr<ral::frame::BlazingTable> makeEmptyBlazingTable(const std::vector<int> & column_indices) const;
 

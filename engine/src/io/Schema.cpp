@@ -80,19 +80,17 @@ void Schema::set_has_header_csv(bool has_header) {
 	this->has_header_csv = has_header;
 }
 
+bool Schema::get_row_count() const { return this->row_count; }
+
+void Schema::set_row_count(size_t row_count_value) {
+    this->row_count = row_count_value;
+}
+
 void Schema::add_column(std::string name, cudf::type_id type, size_t file_index, bool is_in_file) {
 	this->names.push_back(name);
 	this->types.push_back(type);
 	this->calcite_to_file_indices.push_back(file_index);
 	this->in_file.push_back(is_in_file);
-}
-
-void Schema::add_column_and_rowcount(std::string name, cudf::type_id type, size_t file_index, bool is_in_file, size_t row_count) {
-    this->names.push_back(name);
-    this->types.push_back(type);
-    this->calcite_to_file_indices.push_back(file_index);
-    this->in_file.push_back(is_in_file);
-    this->row_count = row_count;
 }
 
 void Schema::add_file(std::string file){
