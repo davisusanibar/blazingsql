@@ -36,8 +36,8 @@ struct TableSchema {
 	std::vector<bool> in_file;
 	int data_type;
 	bool has_header_csv = false;
-
-	ral::frame::BlazingTableView metadata;
+    std::vector<size_t> row_count;
+    ral::frame::BlazingTableView metadata;
 	std::vector<std::vector<int>> row_groups_ids;
 	std::shared_ptr<arrow::Table> arrow_table;
 };

@@ -61,7 +61,7 @@ public:
 	bool get_has_header_csv() const;
 	void set_has_header_csv(bool has_header);
 
-    bool get_row_count() const;
+    size_t get_row_count() const;
     void set_row_count(size_t row_count);
 
 	void add_file(std::string file);
