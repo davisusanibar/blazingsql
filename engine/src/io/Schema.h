@@ -32,13 +32,6 @@ public:
 		std::vector<bool> in_file,
 		std::vector<std::vector<int>> row_groups_ids = {});
 
-    Schema(std::vector<std::string> names,
-           std::vector<size_t> calcite_to_file_indices,
-           std::vector<cudf::type_id> types,
-           std::vector<bool> in_file,
-           std::vector<std::vector<int>> row_groups_ids = {}
-           );
-
 	Schema(std::vector<std::string> names, std::vector<cudf::type_id> types);
 
 	Schema(const Schema& ) = default;

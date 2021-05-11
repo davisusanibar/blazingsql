@@ -80,7 +80,7 @@ void Schema::set_has_header_csv(bool has_header) {
 	this->has_header_csv = has_header;
 }
 
-bool Schema::get_row_count() const { return this->row_count; }
+size_t Schema::get_row_count() const { return this->row_count; }
 
 void Schema::set_row_count(size_t row_count_value) {
     this->row_count = row_count_value;
