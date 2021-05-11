@@ -244,73 +244,75 @@ public class RelationalAlgebraGenerator {
 
 	public RelNode
 	getOptimizedRelationalAlgebraCBO(RelNode rboOptimizedPlan) throws RelConversionException {
-		VolcanoPlanner planner = (VolcanoPlanner) rboOptimizedPlan.getCluster().getPlanner();
-		planner.clear();
+		VolcanoPlanner volcanoPlanner = (VolcanoPlanner) rboOptimizedPlan.getCluster().getPlanner();
+		volcanoPlanner.clear();
 
 		if(rules == null){
 			if (RelOptUtil.toString(rboOptimizedPlan).indexOf("OVER") != -1) {
 				//RBO Rules
-				planner.addRule(AggregateExpandDistinctAggregatesRule.JOIN);
-				planner.addRule(FilterAggregateTransposeRule.INSTANCE);
-				planner.addRule(FilterJoinRule.JoinConditionPushRule.FILTER_ON_JOIN);
-				planner.addRule(FilterJoinRule.JoinConditionPushRule.JOIN);
-				planner.addRule(ProjectMergeRule.INSTANCE);
-				planner.addRule(FilterMergeRule.INSTANCE);
+				volcanoPlanner.addRule(AggregateExpandDistinctAggregatesRule.JOIN);
+				volcanoPlanner.addRule(FilterAggregateTransposeRule.INSTANCE);
+				volcanoPlanner.addRule(FilterJoinRule.JoinConditionPushRule.FILTER_ON_JOIN);
+				volcanoPlanner.addRule(FilterJoinRule.JoinConditionPushRule.JOIN);
+				volcanoPlanner.addRule(ProjectMergeRule.INSTANCE);
+				volcanoPlanner.addRule(FilterMergeRule.INSTANCE);
 				//RBO BSQL Custom Rules
-				planner.addRule(com.blazingdb.calcite.rules.ProjectFilterTransposeRule.INSTANCE);
-				planner.addRule(com.blazingdb.calcite.rules.ReduceExpressionsRule.FILTER_INSTANCE);
-				planner.addRule(com.blazingdb.calcite.rules.ProjectTableScanRule.INSTANCE);
-				planner.addRule(com.blazingdb.calcite.rules.FilterTableScanRule.INSTANCE);
+				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ProjectFilterTransposeRule.INSTANCE);
+				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ReduceExpressionsRule.FILTER_INSTANCE);
+				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ProjectTableScanRule.INSTANCE);
+				volcanoPlanner.addRule(com.blazingdb.calcite.rules.FilterTableScanRule.INSTANCE);
 				//RBO Rules
-				planner.addRule(FilterRemoveIsNotDistinctFromRule.INSTANCE);
-				planner.addRule(AggregateReduceFunctionsRule.INSTANCE);
+				volcanoPlanner.addRule(FilterRemoveIsNotDistinctFromRule.INSTANCE);
+				volcanoPlanner.addRule(AggregateReduceFunctionsRule.INSTANCE);
 			} else {
 				//RBO Rules
-				planner.addRule(AggregateExpandDistinctAggregatesRule.JOIN);
-				planner.addRule(FilterAggregateTransposeRule.INSTANCE);
-				planner.addRule(FilterJoinRule.JoinConditionPushRule.FILTER_ON_JOIN);
-				planner.addRule(FilterJoinRule.JoinConditionPushRule.JOIN);
-				planner.addRule(ProjectMergeRule.INSTANCE);
-				planner.addRule(FilterMergeRule.INSTANCE);
+				volcanoPlanner.addRule(AggregateExpandDistinctAggregatesRule.JOIN);
+				volcanoPlanner.addRule(FilterAggregateTransposeRule.INSTANCE);
+				volcanoPlanner.addRule(FilterJoinRule.JoinConditionPushRule.FILTER_ON_JOIN);
+				volcanoPlanner.addRule(FilterJoinRule.JoinConditionPushRule.JOIN);
+				volcanoPlanner.addRule(ProjectMergeRule.INSTANCE);
+				volcanoPlanner.addRule(FilterMergeRule.INSTANCE);
 				//RBO BSQL Custom Rules
-				planner.addRule(com.blazingdb.calcite.rules.ProjectJoinTransposeRule.INSTANCE);
-				planner.addRule(com.blazingdb.calcite.rules.ProjectTableScanRule.INSTANCE);
-				planner.addRule(com.blazingdb.calcite.rules.ProjectFilterTransposeRule.INSTANCE);
-				planner.addRule(com.blazingdb.calcite.rules.ReduceExpressionsRule.PROJECT_INSTANCE);
-				planner.addRule(com.blazingdb.calcite.rules.ReduceExpressionsRule.FILTER_INSTANCE);
-				planner.addRule(com.blazingdb.calcite.rules.ProjectTableScanRule.INSTANCE);
-				planner.addRule(com.blazingdb.calcite.rules.FilterTableScanRule.INSTANCE);
+				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ProjectJoinTransposeRule.INSTANCE);
+				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ProjectTableScanRule.INSTANCE);
+				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ProjectFilterTransposeRule.INSTANCE);
+				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ReduceExpressionsRule.PROJECT_INSTANCE);
+				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ReduceExpressionsRule.FILTER_INSTANCE);
+				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ProjectTableScanRule.INSTANCE);
+				volcanoPlanner.addRule(com.blazingdb.calcite.rules.FilterTableScanRule.INSTANCE);
 				//RBO Rules
-				planner.addRule(FilterRemoveIsNotDistinctFromRule.INSTANCE);
-				planner.addRule(AggregateReduceFunctionsRule.INSTANCE);
+				volcanoPlanner.addRule(FilterRemoveIsNotDistinctFromRule.INSTANCE);
+				volcanoPlanner.addRule(AggregateReduceFunctionsRule.INSTANCE);
 			}
 		} else {
 			for(RelOptRule ruleRBO : rules) {
-				planner.addRule(ruleRBO);
+				volcanoPlanner.addRule(ruleRBO);
 			}
 		}
 
 		if(rulesCBO == null){
-			planner.addRule(Bindables.BINDABLE_AGGREGATE_RULE);
-			planner.addRule(Bindables.BINDABLE_FILTER_RULE);
-			planner.addRule(Bindables.BINDABLE_JOIN_RULE);
-			planner.addRule(Bindables.BINDABLE_TABLE_SCAN_RULE);
-			planner.addRule(Bindables.BINDABLE_PROJECT_RULE);
-			planner.addRule(Bindables.BINDABLE_SORT_RULE);
-			planner.addRule(JoinAssociateRule.INSTANCE); //to support: a x b x c = b x c x a
+			volcanoPlanner.addRule(Bindables.BINDABLE_AGGREGATE_RULE);
+			volcanoPlanner.addRule(Bindables.BINDABLE_FILTER_RULE);
+			volcanoPlanner.addRule(Bindables.BINDABLE_JOIN_RULE);
+			volcanoPlanner.addRule(Bindables.BINDABLE_TABLE_SCAN_RULE);
+			volcanoPlanner.addRule(Bindables.BINDABLE_PROJECT_RULE);
+			volcanoPlanner.addRule(Bindables.BINDABLE_SORT_RULE);
+			volcanoPlanner.addRule(JoinAssociateRule.INSTANCE); //to support: a x b x c = b x c x a
 //			planner.addRule(JoinPushThroughJoinRule.LEFT);
 //			planner.addRule(JoinPushThroughJoinRule.RIGHT);
 		} else {
 			for(RelOptRule ruleCBO : rulesCBO) {
-				planner.addRule(ruleCBO);
+				volcanoPlanner.addRule(ruleCBO);
 			}
 		}
 
-		rboOptimizedPlan = planner.changeTraits(rboOptimizedPlan, rboOptimizedPlan.getCluster().traitSet().replace(BindableConvention.INSTANCE));
+		rboOptimizedPlan = volcanoPlanner.changeTraits(rboOptimizedPlan, rboOptimizedPlan.getCluster().traitSet().replace(BindableConvention.INSTANCE));
 //		rboOptimizedPlan = planner.changeTraits(rboOptimizedPlan, rboOptimizedPlan.getCluster().traitSet().replace(EnumerableConvention.INSTANCE));
 		rboOptimizedPlan.getCluster().getPlanner().setRoot(rboOptimizedPlan);
 
-		return planner.chooseDelegate().findBestExp();
+		planner.close();
+
+		return volcanoPlanner.chooseDelegate().findBestExp();
 	}
 
 	/**

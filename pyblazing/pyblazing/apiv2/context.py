@@ -2409,7 +2409,7 @@ class BlazingContext(object):
             table.row_count = parsedSchema["row_count"]
             table.args["row_count"] = parsedSchema["row_count"]
             print("asigno nuero columnas")
-            print("es: " + table.args["row_count"])
+            print(table.args["row_count"])
 
             if is_hive_input:
                 # table.column_names are the official schema column_names
