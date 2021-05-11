@@ -32,6 +32,14 @@ public:
 		std::vector<bool> in_file,
 		std::vector<std::vector<int>> row_groups_ids = {});
 
+    Schema(std::vector<std::string> names,
+           std::vector<size_t> calcite_to_file_indices,
+           std::vector<cudf::type_id> types,
+           std::vector<bool> in_file,
+           std::vector<std::vector<int>> row_groups_ids = {},
+           std::vector<size_t> row_count
+           );
+
 	Schema(std::vector<std::string> names, std::vector<cudf::type_id> types);
 
 	Schema(const Schema& ) = default;
@@ -72,7 +80,7 @@ public:
                     cudf::type_id type,
                     size_t file_index,
                     bool is_in_file = true,
-                    size_t row_count);
+                    std::vector<size_t> row_count);
 
 	std::unique_ptr<ral::frame::BlazingTable> makeEmptyBlazingTable(const std::vector<int> & column_indices) const;
 
@@ -90,7 +98,7 @@ private:
 	std::vector<std::string> files;
 	std::vector<std::vector<int>> row_groups_ids;
 	bool has_header_csv = false;
-	size_t row_count;
+	size_t row_count = 0;
 };
 
 } /* namespace io */
