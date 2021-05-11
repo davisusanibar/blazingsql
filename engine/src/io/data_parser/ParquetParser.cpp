@@ -81,10 +81,13 @@ void parquet_parser::parse_schema(
 
   auto file = handle.file_handle;
 	auto parquet_reader = parquet::ParquetFileReader::Open(file);
-	if (parquet_reader->metadata()->num_rows() == 0) {
+	auto num_rows_parquet_reader = parquet_reader->metadata()->num_rows();
+	if (num_rows_parquet_reader == 0) {
 		parquet_reader->Close();
 		return; // if the file has no rows, we dont want cudf_io to try to read it
 	}
+
+    schema.set_row_count(num_rows_parquet_reader);
 
 	auto arrow_source = cudf_io::arrow_io_source{file};
 	cudf_io::parquet_reader_options pq_args = cudf_io::parquet_reader_options::builder(cudf_io::source_info{&arrow_source});
@@ -101,7 +104,6 @@ void parquet_parser::parse_schema(
 		bool is_in_file = true;
 		std::string name = table_out.metadata.column_names.at(i);
 		schema.add_column(name, type, file_index, is_in_file);
-		schema.set_row_count(parquet_reader->metadata()->num_rows());
 	}
 }
 
