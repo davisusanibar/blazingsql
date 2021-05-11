@@ -2403,7 +2403,7 @@ class BlazingContext(object):
                 local_files=local_files,
                 mapping_files=parsed_mapping_files,
             )
-            table.row_count = parsedSchema["row_count"]
+            table.row_count = parsedSchema.row_count
 
             if is_hive_input:
                 # table.column_names are the official schema column_names
@@ -2541,7 +2541,7 @@ class BlazingContext(object):
             )
             table.column_names = parsedSchema["names"]
             table.column_types = parsedSchema["types"]
-            table.row_count = parsedSchema["row_count"]
+            table.row_count = parsedSchema.row_count
 
         if table is not None:
             self.add_remove_table(table_name, True, table)
