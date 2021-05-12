@@ -310,7 +310,7 @@ public class RelationalAlgebraGenerator {
 //		rboOptimizedPlan = planner.changeTraits(rboOptimizedPlan, rboOptimizedPlan.getCluster().traitSet().replace(EnumerableConvention.INSTANCE));
 		rboOptimizedPlan.getCluster().getPlanner().setRoot(rboOptimizedPlan);
 
-		planner.close();
+		planner.close(); //to prevent error like: cannot move to STATE_2_READY from STATE_5_CONVERTED
 
 		return volcanoPlanner.chooseDelegate().findBestExp();
 	}

@@ -71,7 +71,7 @@ public class CatalogTableImpl implements CatalogTable {
 			column.setTable(this);
 			this.tableColumns.put(column.getColumnName(), column);
 		}
-		this.rowcount = rowcount;
+		this.rowcount = Double.valueOf(rowcount);
 	}
 
 	/**
