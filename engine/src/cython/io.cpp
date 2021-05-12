@@ -165,6 +165,7 @@ TableSchema parseSchema(std::vector<std::string> files,
 	tableSchema.calcite_to_file_indices = schema.get_calcite_to_file_indices();
 	tableSchema.in_file = schema.get_in_file();
 	tableSchema.has_header_csv = schema.get_has_header_csv();
+	tableSchema.row_count = schema.get_row_count();
 
 	return tableSchema;
 }
