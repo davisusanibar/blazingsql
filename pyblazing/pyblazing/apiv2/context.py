@@ -1006,11 +1006,9 @@ class BlazingTable(object):
         row_groups_ids=[],
         local_files=False,
         mapping_files={},
-        row_count=None,
     ):
         # row_groups_ids, vector<vector<int>> one vector
         # of row_groups per file
-        self.row_count = row_count
         self.name = name
         self.fileType = fileType
         if fileType == DataType.ARROW:
@@ -1915,9 +1913,7 @@ class BlazingContext(object):
                     dataType = ColumnTypeClass.fromTypeId(type_id)
                     column = ColumnClass(column, dataType, order)
                     arr.add(column)
-                # tableJava = TableClass(tableName, self.db, arr, len(table))
-                print("antes de llamar a java")
-                print(table.args["row_count"])
+                print("Calling optimizer for table: " + tableName + ", row_count: " + str(table.args["row_count"]))
                 tableJava = TableClass(tableName, self.db, arr, table.args["row_count"])
                 self.db.addTable(tableJava)
                 self.schema = BlazingSchemaClass(self.db)
@@ -2405,12 +2401,7 @@ class BlazingContext(object):
                 local_files=local_files,
                 mapping_files=parsed_mapping_files,
             )
-            print(parsedSchema["row_count"])
-            table.row_count = parsedSchema["row_count"]
             table.args["row_count"] = parsedSchema["row_count"]
-            print("asigno nuero columnas")
-            print(table.args["row_count"])
-
             if is_hive_input:
                 # table.column_names are the official schema column_names
                 table.column_names = hive_schema["column_names"]
@@ -2550,8 +2541,6 @@ class BlazingContext(object):
             print(parsedSchema["row_count"])
             table.row_count = parsedSchema["row_count"]
             table.args["row_count"] = parsedSchema["row_count"]
-            print("asigno nuero columnas v2")
-
         if table is not None:
             self.add_remove_table(table_name, True, table)
 
