@@ -63,7 +63,7 @@ public class CatalogTableImpl implements CatalogTable {
 	 * @param db the database this table is being added to
 	 * @param columns list of columns to be added to the table.
 	 */
-	public CatalogTableImpl(String name, CatalogDatabaseImpl db, List<CatalogColumnImpl> columns, Double rowcount) {
+	public CatalogTableImpl(String name, CatalogDatabaseImpl db, List<CatalogColumnImpl> columns, int rowcount) {
 		this.name = name;
 		this.database = db;
 		this.tableColumns = new HashMap<String, CatalogColumnImpl>();
