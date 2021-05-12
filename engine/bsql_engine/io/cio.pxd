@@ -93,7 +93,7 @@ cdef extern from "../include/io/io.h" nogil:
         vector[bool] in_file
         int data_type
         bool has_header_csv
-        double row_count
+        size_t row_count
         BlazingTableView metadata
         vector[vector[int]] row_groups_ids
         shared_ptr[CTable] arrow_table
