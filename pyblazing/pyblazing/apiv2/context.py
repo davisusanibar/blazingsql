@@ -3000,7 +3000,7 @@ class BlazingContext(object):
         return self._get_results_distributed(token)
 
     def sql(
-        self, query, algebra=None, config_options={}, return_token: bool = False,
+        self, query, optimizer="RBO", algebra=None, config_options={}, return_token: bool = False,
     ):
         """
         Query a BlazingSQL table.
@@ -3068,7 +3068,7 @@ class BlazingContext(object):
         fileTypes = []
 
         if algebra is None:
-            algebra = self.explain(query)
+            algebra = self.explain(query, optimizer)
 
         # when an empty `LogicalValues` appears on the optimized plan
         # there aren't neither BindableTableScan nor TableScan nor Project
