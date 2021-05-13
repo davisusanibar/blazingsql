@@ -2539,7 +2539,6 @@ class BlazingContext(object):
             table.column_names = parsedSchema["names"]
             table.column_types = parsedSchema["types"]
             print(parsedSchema["row_count"])
-            table.row_count = parsedSchema["row_count"]
             table.args["row_count"] = parsedSchema["row_count"]
         if table is not None:
             self.add_remove_table(table_name, True, table)
