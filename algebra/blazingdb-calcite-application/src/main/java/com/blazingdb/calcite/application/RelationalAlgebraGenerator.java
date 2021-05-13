@@ -394,7 +394,7 @@ public class RelationalAlgebraGenerator {
 		String response = "";
 
 		try {
-			response = RelOptUtil.toString(getRelationalAlgebraCBO(sql));
+			response = RelOptUtil.toString(getRelationalAlgebraCBO(sql)).replaceAll("Bindable", "Logical").replaceAll("LogicalTableScan", "BindableTableScan");
 		}catch(SqlValidationException ex){
 			//System.out.println(ex.getMessage());
 			//System.out.println("Found validation err!");
