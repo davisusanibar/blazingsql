@@ -107,12 +107,13 @@ TableSchema parseSchema(std::vector<std::string> files,
 	auto loader = std::make_shared<ral::io::data_loader>(parser, provider);
 
     ral::io::Schema schemaToRowCount;
-
+    auto parserToRowCount = parser;
+    auto providerToRowCount = provider;
     auto total_row_count = 0;
-    while (provider->has_next()){
-        ral::io::data_handle handleToRowCount = provider->get_next();
+    while (providerToRowCount->has_next()){
+        ral::io::data_handle handleToRowCount = providerToRowCount->get_next();
         if (handleToRowCount.file_handle != nullptr) {
-            parser->parse_schema(handleToRowCount, schemaToRowCount);
+            parserToRowCount->parse_schema(handleToRowCount, schemaToRowCount);
             std::cout << schemaToRowCount.get_row_count() << std::endl;
             total_row_count = total_row_count + schemaToRowCount.get_row_count();
         }
