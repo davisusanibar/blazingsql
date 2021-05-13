@@ -129,12 +129,20 @@ TableSchema parseSchema(std::vector<std::string> files,
           }
         }
       }
-		}
-		if (!got_schema){
-			std::cout<<"ERROR: Could not get schema"<<std::endl;
-		}
+    }
 
-		bool open_file = false;
+    while (provider->has_next()){
+        ral::io::data_handle handle = provider->get_next(false);
+        parser->parse_schema(handle, schema);
+        std::cout << schema.get_row_count() << std::endl;
+        total_row_count = total_row_count + schema.get_row_count();
+    }
+
+    if (!got_schema){
+        std::cout<<"ERROR: Could not get schema"<<std::endl;
+    }
+
+    bool open_file = false;
     if (!isSqlProvider) {
       while (provider->has_next()){
         std::vector<ral::io::data_handle> handles = provider->get_some(64, open_file);
@@ -144,18 +152,11 @@ TableSchema parseSchema(std::vector<std::string> files,
       }
     }
 
-		for(auto extra_column : extra_columns) {
-			schema.add_column(extra_column.first, extra_column.second, 0, false);
-		}
+    for(auto extra_column : extra_columns) {
+        schema.add_column(extra_column.first, extra_column.second, 0, false);
+    }
 
-        while (provider->has_next()){
-            ral::io::data_handle handle = provider->get_next(false);
-            parser->parse_schema(handle, schema);
-            std::cout << schema.get_row_count() << std::endl;
-            total_row_count = total_row_count + schema.get_row_count();
-        }
-
-		provider->reset();
+    provider->reset();
 
 	} catch(std::exception & e) {
 		std::shared_ptr<spdlog::logger> logger = spdlog::get("batch_logger");
