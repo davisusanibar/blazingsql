@@ -148,7 +148,16 @@ TableSchema parseSchema(std::vector<std::string> files,
         for(auto handle : handles) {
             std::cout << "r(auto handle : handle" << std::endl;
           schema.add_file(handle.uri.toString(true));
+          total_row_count = total_row_count + schema.get_row_count();
         }
+
+        //aaa
+          ral::io::data_handle handle = provider->get_next();
+          parser->parse_schema(handle, schema);
+          std::cout << "otros no uno" << std::endl;
+          std::cout << schema.get_row_count() << std::endl;
+          total_row_count = total_row_count + schema.get_row_count();
+        //aaa
       }
     }
 
