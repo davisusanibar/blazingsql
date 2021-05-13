@@ -106,21 +106,11 @@ TableSchema parseSchema(std::vector<std::string> files,
 
 	auto loader = std::make_shared<ral::io::data_loader>(parser, provider);
 
-    ral::io::Schema schemaToRowCount;
-    auto parserToRowCount = parser;
-    auto providerToRowCount = provider;
     auto total_row_count = 0;
-    while (providerToRowCount->has_next()){
-        ral::io::data_handle handleToRowCount = providerToRowCount->get_next();
-        if (handleToRowCount.file_handle != nullptr) {
-            parserToRowCount->parse_schema(handleToRowCount, schemaToRowCount);
-            std::cout << schemaToRowCount.get_row_count() << std::endl;
-            total_row_count = total_row_count + schemaToRowCount.get_row_count();
-        }
-    }
 
     ral::io::Schema schema;
-	try {
+
+    try {
 		bool got_schema = false;
     if (isSqlProvider) {
         ral::io::data_handle handle = provider->get_next(false);
@@ -150,6 +140,15 @@ TableSchema parseSchema(std::vector<std::string> files,
         std::vector<ral::io::data_handle> handles = provider->get_some(64, open_file);
         for(auto handle : handles) {
           schema.add_file(handle.uri.toString(true));
+        }
+
+        ral::io::data_handle handle = provider->get_next();
+        if (handle.file_handle != nullptr) {
+            parser->parse_schema(handle, schema);
+            if (schema.get_num_columns() > 0) {
+                std::cout << schema.get_row_count() << std::endl;
+                total_row_count = total_row_count + schema.get_row_count();
+            }
         }
       }
     }
