@@ -127,15 +127,10 @@ TableSchema parseSchema(std::vector<std::string> files,
             got_schema = true;
             schema.add_file(handle.uri.toString(true));
           }
+          std::cout << schema.get_row_count() << std::endl;
+          total_row_count = total_row_count + schema.get_row_count();
         }
       }
-    }
-
-    while (got_schema && provider->has_next()){
-        ral::io::data_handle handle = provider->get_next(false);
-        parser->parse_schema(handle, schema);
-        std::cout << schema.get_row_count() << std::endl;
-        total_row_count = total_row_count + schema.get_row_count();
     }
 
     if (!got_schema){
