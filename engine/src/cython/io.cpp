@@ -117,6 +117,7 @@ TableSchema parseSchema(std::vector<std::string> files,
           got_schema = true;
         }
     } else {
+        auto total_row_count = 0;
       while (!got_schema && provider->has_next()){
         ral::io::data_handle handle = provider->get_next();
         if (handle.file_handle != nullptr){
@@ -124,6 +125,8 @@ TableSchema parseSchema(std::vector<std::string> files,
           if (schema.get_num_columns() > 0){
             got_schema = true;
             schema.add_file(handle.uri.toString(true));
+              std::cout << schema.get_row_count() << std::endl;
+              total_row_count = sum_rom_count + schema.get_row_count()
           }
         }
       }
@@ -165,7 +168,7 @@ TableSchema parseSchema(std::vector<std::string> files,
 	tableSchema.calcite_to_file_indices = schema.get_calcite_to_file_indices();
 	tableSchema.in_file = schema.get_in_file();
 	tableSchema.has_header_csv = schema.get_has_header_csv();
-	tableSchema.row_count = schema.get_row_count();
+	tableSchema.row_count = total_row_count;
 
 	return tableSchema;
 }
