@@ -48,7 +48,7 @@ TableSchema parseSchema(std::vector<std::string> files,
 	}
 
 	const DataType data_type_hint = ral::io::inferDataType(file_format_hint);
-	const DataType fileType = inferFileType(files, data_type_hint, ignore_missing_paths);
+	const DataType - = inferFileType(files, data_type_hint, ignore_missing_paths);
 	auto args_map = ral::io::to_map(arg_keys, arg_values);
 	TableSchema tableSchema;
 	tableSchema.data_type = fileType;
@@ -125,8 +125,6 @@ TableSchema parseSchema(std::vector<std::string> files,
           if (schema.get_num_columns() > 0){
             got_schema = true;
             schema.add_file(handle.uri.toString(true));
-              std::cout << schema.get_row_count() << std::endl;
-              total_row_count = total_row_count + schema.get_row_count();
           }
         }
       }
@@ -141,6 +139,8 @@ TableSchema parseSchema(std::vector<std::string> files,
         std::vector<ral::io::data_handle> handles = provider->get_some(64, open_file);
         for(auto handle : handles) {
           schema.add_file(handle.uri.toString(true));
+          std::cout << schema.get_row_count() << std::endl;
+          total_row_count = total_row_count + schema.get_row_count();
         }
       }
     }
