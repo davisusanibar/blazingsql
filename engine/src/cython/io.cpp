@@ -114,6 +114,8 @@ TableSchema parseSchema(std::vector<std::string> files,
     if (isSqlProvider) {
         ral::io::data_handle handle = provider->get_next(false);
         parser->parse_schema(handle, schema);
+        std::cout << schema.get_row_count() << std::endl;
+        total_row_count = total_row_count + schema.get_row_count();
         if (schema.get_num_columns() > 0){
           got_schema = true;
         }
@@ -139,8 +141,6 @@ TableSchema parseSchema(std::vector<std::string> files,
         std::vector<ral::io::data_handle> handles = provider->get_some(64, open_file);
         for(auto handle : handles) {
           schema.add_file(handle.uri.toString(true));
-          std::cout << schema.get_row_count() << std::endl;
-          total_row_count = total_row_count + schema.get_row_count();
         }
       }
     }
