@@ -48,7 +48,7 @@ TableSchema parseSchema(std::vector<std::string> files,
 	}
 
 	const DataType data_type_hint = ral::io::inferDataType(file_format_hint);
-	const DataType - = inferFileType(files, data_type_hint, ignore_missing_paths);
+    const DataType fileType = inferFileType(files, data_type_hint, ignore_missing_paths);
 	auto args_map = ral::io::to_map(arg_keys, arg_values);
 	TableSchema tableSchema;
 	tableSchema.data_type = fileType;
