@@ -143,8 +143,10 @@ TableSchema parseSchema(std::vector<std::string> files,
     bool open_file = false;
     if (!isSqlProvider) {
       while (provider->has_next()){
+          std::cout << "vider->has_next())" << std::endl;
         std::vector<ral::io::data_handle> handles = provider->get_some(64, open_file);
         for(auto handle : handles) {
+            std::cout << "r(auto handle : handle" << std::endl;
           schema.add_file(handle.uri.toString(true));
         }
       }
