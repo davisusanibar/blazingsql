@@ -126,7 +126,7 @@ TableSchema parseSchema(std::vector<std::string> files,
             got_schema = true;
             schema.add_file(handle.uri.toString(true));
               std::cout << schema.get_row_count() << std::endl;
-              total_row_count = total_row_count + schema.get_row_count()
+              total_row_count = total_row_count + schema.get_row_count();
           }
         }
       }
