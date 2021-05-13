@@ -118,8 +118,6 @@ TableSchema parseSchema(std::vector<std::string> files,
         if (schema.get_num_columns() > 0){
           got_schema = true;
         }
-        std::cout << schema.get_row_count() << std::endl;
-        total_row_count = total_row_count + schema.get_row_count();
     } else {
       while (!got_schema && provider->has_next()){
         ral::io::data_handle handle = provider->get_next();
@@ -129,8 +127,6 @@ TableSchema parseSchema(std::vector<std::string> files,
             got_schema = true;
             schema.add_file(handle.uri.toString(true));
           }
-          std::cout << schema.get_row_count() << std::endl;
-          total_row_count = total_row_count + schema.get_row_count();
         }
       }
 		}
@@ -144,8 +140,6 @@ TableSchema parseSchema(std::vector<std::string> files,
         std::vector<ral::io::data_handle> handles = provider->get_some(64, open_file);
         for(auto handle : handles) {
           schema.add_file(handle.uri.toString(true));
-          std::cout << schema.get_row_count() << std::endl;
-          total_row_count = total_row_count + schema.get_row_count();
         }
       }
     }
@@ -153,6 +147,12 @@ TableSchema parseSchema(std::vector<std::string> files,
 		for(auto extra_column : extra_columns) {
 			schema.add_column(extra_column.first, extra_column.second, 0, false);
 		}
+
+        while (provider->has_next()){
+            std::cout << schema.get_row_count() << std::endl;
+            total_row_count = total_row_count + schema.get_row_count();
+        }
+
 		provider->reset();
 
 	} catch(std::exception & e) {
