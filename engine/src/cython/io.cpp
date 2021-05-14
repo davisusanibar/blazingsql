@@ -159,13 +159,13 @@ TableSchema parseSchema(std::vector<std::string> files,
     while (providerSumRowCount->has_next()){
         ral::io::data_handle handle = providerSumRowCount->get_next();
         if (handle.file_handle != nullptr){
-            parser->parse_schema(handle, schemaSumRowCount);
-            if (schemaSumRowCount.get_num_columns() > 0){
+            parser->parse_schema(handle, schema);
+            if (schema.get_num_columns() > 0){
                 got_schema = true;
-                schemaSumRowCount.add_file(handle.uri.toString(true));
+                schema.add_file(handle.uri.toString(true));
             }
-            std::cout << schemaSumRowCount.get_row_count() << std::endl;
-            total_row_count = total_row_count + schemaSumRowCount.get_row_count();
+            std::cout << schema.get_row_count() << std::endl;
+            total_row_count = total_row_count + schema.get_row_count();
         }
     }
 
