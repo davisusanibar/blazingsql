@@ -104,7 +104,7 @@ TableSchema parseSchema(std::vector<std::string> files,
 
   if (!isSqlProvider) {
       provider = std::make_shared<ral::io::uri_data_provider>(uris, ignore_missing_paths);
-      providerSumRowCount = provider;
+      providerSumRowCount = std::make_shared<ral::io::uri_data_provider>(uris, ignore_missing_paths);
   }
 
 	auto loader = std::make_shared<ral::io::data_loader>(parser, provider);
