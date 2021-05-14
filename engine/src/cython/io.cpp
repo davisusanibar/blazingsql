@@ -59,7 +59,6 @@ TableSchema parseSchema(std::vector<std::string> files,
 	}
 
 	std::shared_ptr<ral::io::data_parser> parser;
-	std::shared_ptr<ral::io::data_parser> parserSumRowCount;
     std::shared_ptr<ral::io::data_provider> provider = nullptr;
     std::shared_ptr<ral::io::data_provider> providerSumRowCount = nullptr;
 
@@ -104,14 +103,10 @@ TableSchema parseSchema(std::vector<std::string> files,
 
   if (!isSqlProvider) {
       provider = std::make_shared<ral::io::uri_data_provider>(uris, ignore_missing_paths);
-//      providerSumRowCount = std::make_shared<ral::io::uri_data_provider>(uris, ignore_missing_paths);
   }
 
 	auto loader = std::make_shared<ral::io::data_loader>(parser, provider);
-//	auto loaderSumRowCount = std::make_shared<ral::io::data_loader>(parser, providerSumRowCount);
     providerSumRowCount = provider->clone();
-
-    auto total_row_count = 0;
 
     ral::io::Schema schema;
     ral::io::Schema schemaSumRowCount;
@@ -152,11 +147,11 @@ TableSchema parseSchema(std::vector<std::string> files,
     }
 
     for(auto extra_column : extra_columns) {
-        std::cout << "extra_column" << std::endl;
         schema.add_column(extra_column.first, extra_column.second, 0, false);
     }
 
     //sum row count
+    auto total_row_count = 0;
     while (providerSumRowCount->has_next()){
         ral::io::data_handle handle = providerSumRowCount->get_next();
         if (handle.file_handle != nullptr){
