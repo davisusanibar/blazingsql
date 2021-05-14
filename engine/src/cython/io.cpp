@@ -109,6 +109,7 @@ TableSchema parseSchema(std::vector<std::string> files,
     auto total_row_count = 0;
 
     ral::io::Schema schema;
+    ral::io::Schema schemaTmp;
 
     try {
 		bool got_schema = false;
@@ -156,7 +157,9 @@ TableSchema parseSchema(std::vector<std::string> files,
             std::cout << "r(auto handle : handle" << std::endl;
           schema.add_file(handle.uri.toString(true));
 
-//            parser->parse_schema(handle, schema);
+            std::cout << "1111111111" << std::endl;
+            parser->parse_schema(handle, schemaTmp);
+            std::cout << "2222222" << std::endl;
             std::cout << "otros no uno" << std::endl;
             std::cout << schema.get_row_count() << std::endl;
         }
