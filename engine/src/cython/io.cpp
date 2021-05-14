@@ -113,6 +113,7 @@ TableSchema parseSchema(std::vector<std::string> files,
     auto total_row_count = 0;
 
     ral::io::Schema schema;
+    ral::io::Schema schemaSumRowCount;
 
     try {
 		bool got_schema = false;
@@ -160,13 +161,13 @@ TableSchema parseSchema(std::vector<std::string> files,
     while (providerSumRowCount->has_next()){
         ral::io::data_handle handle = providerSumRowCount->get_next();
         if (handle.file_handle != nullptr){
-            parser->parse_schema(handle, schema);
-            if (schema.get_num_columns() > 0){
+            parser->parse_schema(handle, schemaSumRowCount);
+            if (schemaSumRowCount.get_num_columns() > 0){
                 got_schema = true;
-                schema.add_file(handle.uri.toString(true));
+                schemaSumRowCount.add_file(handle.uri.toString(true));
             }
-            std::cout << schema.get_row_count() << std::endl;
-            total_row_count = total_row_count + schema.get_row_count();
+            std::cout << schemaSumRowCount.get_row_count() << std::endl;
+            total_row_count = total_row_count + schemaSumRowCount.get_row_count();
         }
     }
 
