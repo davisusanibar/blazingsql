@@ -109,7 +109,7 @@ TableSchema parseSchema(std::vector<std::string> files,
 
 	auto loader = std::make_shared<ral::io::data_loader>(parser, provider);
 //	auto loaderSumRowCount = std::make_shared<ral::io::data_loader>(parser, providerSumRowCount);
-    providerSumRowCount = provider;
+    providerSumRowCount = provider->clone();
 
     auto total_row_count = 0;
 
