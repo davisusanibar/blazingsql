@@ -156,7 +156,7 @@ TableSchema parseSchema(std::vector<std::string> files,
             std::cout << "r(auto handle : handle" << std::endl;
           schema.add_file(handle.uri.toString(true));
 
-            parser->parse_schema(handle, schema);
+//            parser->parse_schema(handle, schema);
             std::cout << "otros no uno" << std::endl;
             std::cout << schema.get_row_count() << std::endl;
         }
