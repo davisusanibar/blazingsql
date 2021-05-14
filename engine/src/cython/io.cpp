@@ -59,7 +59,9 @@ TableSchema parseSchema(std::vector<std::string> files,
 	}
 
 	std::shared_ptr<ral::io::data_parser> parser;
-  std::shared_ptr<ral::io::data_provider> provider = nullptr;
+	std::shared_ptr<ral::io::data_parser> parserSumRowCount;
+    std::shared_ptr<ral::io::data_provider> provider = nullptr;
+    std::shared_ptr<ral::io::data_provider> providerSumRowCount = nullptr;
 
   bool isSqlProvider = false;
 
@@ -102,14 +104,15 @@ TableSchema parseSchema(std::vector<std::string> files,
 
   if (!isSqlProvider) {
       provider = std::make_shared<ral::io::uri_data_provider>(uris, ignore_missing_paths);
+      providerSumRowCount = provider;
   }
 
 	auto loader = std::make_shared<ral::io::data_loader>(parser, provider);
+	auto loaderSumRowCount = loader;
 
     auto total_row_count = 0;
 
     ral::io::Schema schema;
-    ral::io::Schema schemaTmp;
 
     try {
 		bool got_schema = false;
@@ -117,17 +120,14 @@ TableSchema parseSchema(std::vector<std::string> files,
         ral::io::data_handle handle = provider->get_next(false);
         parser->parse_schema(handle, schema);
         if (schema.get_num_columns() > 0){
-            std::cout << "got_schema" << std::endl;
           got_schema = true;
         }
     } else {
       while (!got_schema && provider->has_next()){
-          std::cout << "while" << std::endl;
         ral::io::data_handle handle = provider->get_next();
         if (handle.file_handle != nullptr){
           parser->parse_schema(handle, schema);
           if (schema.get_num_columns() > 0){
-              std::cout << "ema.get_num_columns()" << std::endl;
             got_schema = true;
             schema.add_file(handle.uri.toString(true));
           }
@@ -144,34 +144,10 @@ TableSchema parseSchema(std::vector<std::string> files,
     bool open_file = false;
     if (!isSqlProvider) {
       while (provider->has_next()){
-//          std::cout << "inicio provider" << std::endl;
-//          ral::io::data_handle handle = provider->get_next();
-//          parser->parse_schema(handle, schema);
-//          std::cout << "otros no uno" << std::endl;
-//          std::cout << schema.get_row_count() << std::endl;
-//          total_row_count = total_row_count + schema.get_row_count();
-
-          std::cout << "vider->has_next())" << std::endl;
         std::vector<ral::io::data_handle> handles = provider->get_some(64, open_file);
         for(auto handle : handles) {
-            std::cout << "r(auto handle : handle" << std::endl;
           schema.add_file(handle.uri.toString(true));
-
-            std::cout << "1111111111" << std::endl;
-            parser->parse_schema(handle, schemaTmp);
-            std::cout << "2222222" << std::endl;
-            std::cout << "otros no uno" << std::endl;
-            std::cout << schema.get_row_count() << std::endl;
         }
-
-        //aaa
-//          std::cout << "iniio suma" << std::endl;
-//          ral::io::data_handle handle = provider->get_next();
-//          parser->parse_schema(handle, schema);
-//          std::cout << "otros no uno" << std::endl;
-//          std::cout << schema.get_row_count() << std::endl;
-//          total_row_count = total_row_count + schema.get_row_count();
-        //aaa
       }
     }
 
@@ -179,6 +155,21 @@ TableSchema parseSchema(std::vector<std::string> files,
         std::cout << "extra_column" << std::endl;
         schema.add_column(extra_column.first, extra_column.second, 0, false);
     }
+
+    //sum row count
+    while (providerSumRowCount->has_next()){
+        ral::io::data_handle handle = providerSumRowCount->get_next();
+        if (handle.file_handle != nullptr){
+            parser->parse_schema(handle, schema);
+            if (schema.get_num_columns() > 0){
+                got_schema = true;
+                schema.add_file(handle.uri.toString(true));
+            }
+            std::cout << schema.get_row_count() << std::endl;
+            total_row_count = total_row_count + schema.get_row_count();
+        }
+    }
+
 
     provider->reset();
 
