@@ -110,6 +110,7 @@ TableSchema parseSchema(std::vector<std::string> files,
 
     ral::io::Schema schema;
     ral::io::Schema schemaSumRowCount;
+    auto total_row_count = 0;
 
     try {
 		bool got_schema = false;
@@ -151,7 +152,6 @@ TableSchema parseSchema(std::vector<std::string> files,
     }
 
     //sum row count
-    auto total_row_count = 0;
     while (providerSumRowCount->has_next()){
         ral::io::data_handle handle = providerSumRowCount->get_next();
         if (handle.file_handle != nullptr){
