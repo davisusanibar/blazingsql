@@ -143,18 +143,22 @@ TableSchema parseSchema(std::vector<std::string> files,
     bool open_file = false;
     if (!isSqlProvider) {
       while (provider->has_next()){
-          std::cout << "inicio provider" << std::endl;
-          ral::io::data_handle handle = provider->get_next();
-          parser->parse_schema(handle, schema);
-          std::cout << "otros no uno" << std::endl;
-          std::cout << schema.get_row_count() << std::endl;
-          total_row_count = total_row_count + schema.get_row_count();
+//          std::cout << "inicio provider" << std::endl;
+//          ral::io::data_handle handle = provider->get_next();
+//          parser->parse_schema(handle, schema);
+//          std::cout << "otros no uno" << std::endl;
+//          std::cout << schema.get_row_count() << std::endl;
+//          total_row_count = total_row_count + schema.get_row_count();
 
           std::cout << "vider->has_next())" << std::endl;
         std::vector<ral::io::data_handle> handles = provider->get_some(64, open_file);
         for(auto handle : handles) {
             std::cout << "r(auto handle : handle" << std::endl;
           schema.add_file(handle.uri.toString(true));
+
+            parser->parse_schema(handle, schema);
+            std::cout << "otros no uno" << std::endl;
+            std::cout << schema.get_row_count() << std::endl;
         }
 
         //aaa
