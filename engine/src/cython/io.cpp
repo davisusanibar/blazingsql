@@ -104,11 +104,12 @@ TableSchema parseSchema(std::vector<std::string> files,
 
   if (!isSqlProvider) {
       provider = std::make_shared<ral::io::uri_data_provider>(uris, ignore_missing_paths);
-      providerSumRowCount = std::make_shared<ral::io::uri_data_provider>(uris, ignore_missing_paths);
+//      providerSumRowCount = std::make_shared<ral::io::uri_data_provider>(uris, ignore_missing_paths);
   }
 
 	auto loader = std::make_shared<ral::io::data_loader>(parser, provider);
-	auto loaderSumRowCount = std::make_shared<ral::io::data_loader>(parser, providerSumRowCount);
+//	auto loaderSumRowCount = std::make_shared<ral::io::data_loader>(parser, providerSumRowCount);
+    providerSumRowCount = provider;
 
     auto total_row_count = 0;
 
@@ -159,18 +160,18 @@ TableSchema parseSchema(std::vector<std::string> files,
     while (providerSumRowCount->has_next()){
         ral::io::data_handle handle = providerSumRowCount->get_next();
         if (handle.file_handle != nullptr){
-            parser->parse_schema(handle, schema);
-            if (schema.get_num_columns() > 0){
+            parser->parse_schema(handle, schemaSumRowCount);
+            if (schemaSumRowCount.get_num_columns() > 0){
                 got_schema = true;
-                schema.add_file(handle.uri.toString(true));
+                schemaSumRowCount.add_file(handle.uri.toString(true));
             }
-            std::cout << schema.get_row_count() << std::endl;
-            total_row_count = total_row_count + schema.get_row_count();
+            std::cout << schemaSumRowCount.get_row_count() << std::endl;
+            total_row_count = total_row_count + schemaSumRowCount.get_row_count();
         }
     }
 
-
     provider->reset();
+    providerSumRowCount->reset();
 
 	} catch(std::exception & e) {
 		std::shared_ptr<spdlog::logger> logger = spdlog::get("batch_logger");
