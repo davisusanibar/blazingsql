@@ -243,12 +243,12 @@ public class RelationalAlgebraGenerator {
 	}
 
 	public RelNode
-	getOptimizedRelationalAlgebraCBO(RelNode rboOptimizedPlan) throws RelConversionException {
-		VolcanoPlanner volcanoPlanner = (VolcanoPlanner) rboOptimizedPlan.getCluster().getPlanner();
+	getOptimizedRelationalAlgebraCBOThruNonOptimized(RelNode nonOptimizedPlan) throws RelConversionException {
+		VolcanoPlanner volcanoPlanner = (VolcanoPlanner) nonOptimizedPlan.getCluster().getPlanner();
 		volcanoPlanner.clear();
 
 		if(rules == null){
-			if (RelOptUtil.toString(rboOptimizedPlan).indexOf("OVER") != -1) {
+			if (RelOptUtil.toString(nonOptimizedPlan).indexOf("OVER") != -1) {
 				//RBO Rules
 				volcanoPlanner.addRule(AggregateExpandDistinctAggregatesRule.JOIN);
 				volcanoPlanner.addRule(FilterAggregateTransposeRule.INSTANCE);
@@ -298,8 +298,34 @@ public class RelationalAlgebraGenerator {
 			volcanoPlanner.addRule(Bindables.BINDABLE_PROJECT_RULE);
 			volcanoPlanner.addRule(Bindables.BINDABLE_SORT_RULE);
 			volcanoPlanner.addRule(JoinAssociateRule.INSTANCE); //to support: a x b x c = b x c x a
-//			planner.addRule(JoinPushThroughJoinRule.LEFT);
-//			planner.addRule(JoinPushThroughJoinRule.RIGHT);
+		} else {
+			for(RelOptRule ruleCBO : rulesCBO) {
+				volcanoPlanner.addRule(ruleCBO);
+			}
+		}
+
+		nonOptimizedPlan = volcanoPlanner.changeTraits(nonOptimizedPlan, nonOptimizedPlan.getCluster().traitSet().replace(BindableConvention.INSTANCE));
+		//nonOptimizedPlan = plvolcanoPlanneranner.changeTraits(nonOptimizedPlan, nonOptimizedPlan.getCluster().traitSet().replace(EnumerableConvention.INSTANCE));
+		nonOptimizedPlan.getCluster().getPlanner().setRoot(nonOptimizedPlan);
+
+		planner.close(); //to prevent error like: cannot move to STATE_2_READY from STATE_5_CONVERTED
+
+		return volcanoPlanner.chooseDelegate().findBestExp();
+	}
+
+	public RelNode
+	getOptimizedRelationalAlgebraCBOThruRBOOptimized(RelNode rboOptimizedPlan) throws RelConversionException {
+		VolcanoPlanner volcanoPlanner = (VolcanoPlanner) rboOptimizedPlan.getCluster().getPlanner();
+		volcanoPlanner.clear();
+
+		if(rulesCBO == null){
+			volcanoPlanner.addRule(Bindables.BINDABLE_AGGREGATE_RULE);
+			volcanoPlanner.addRule(Bindables.BINDABLE_FILTER_RULE);
+			volcanoPlanner.addRule(Bindables.BINDABLE_JOIN_RULE);
+			volcanoPlanner.addRule(Bindables.BINDABLE_TABLE_SCAN_RULE);
+			volcanoPlanner.addRule(Bindables.BINDABLE_PROJECT_RULE);
+			volcanoPlanner.addRule(Bindables.BINDABLE_SORT_RULE);
+			volcanoPlanner.addRule(JoinAssociateRule.INSTANCE); //to support: a x b x c = b x c x a
 		} else {
 			for(RelOptRule ruleCBO : rulesCBO) {
 				volcanoPlanner.addRule(ruleCBO);
@@ -307,7 +333,7 @@ public class RelationalAlgebraGenerator {
 		}
 
 		rboOptimizedPlan = volcanoPlanner.changeTraits(rboOptimizedPlan, rboOptimizedPlan.getCluster().traitSet().replace(BindableConvention.INSTANCE));
-//		rboOptimizedPlan = planner.changeTraits(rboOptimizedPlan, rboOptimizedPlan.getCluster().traitSet().replace(EnumerableConvention.INSTANCE));
+		//rboOptimizedPlan = volcanoPlanner.changeTraits(rboOptimizedPlan, rboOptimizedPlan.getCluster().traitSet().replace(EnumerableConvention.INSTANCE));
 		rboOptimizedPlan.getCluster().getPlanner().setRoot(rboOptimizedPlan);
 
 		planner.close(); //to prevent error like: cannot move to STATE_2_READY from STATE_5_CONVERTED
@@ -351,11 +377,37 @@ public class RelationalAlgebraGenerator {
 	 * @throws SqlSyntaxException, SqlValidationException, RelConversionException
 	 */
 	public RelNode
-	getRelationalAlgebraCBO(String sql) throws SqlSyntaxException, SqlValidationException, RelConversionException {
+	getRelationalAlgebraCBOThruRBOOptimized(String sql) throws SqlSyntaxException, SqlValidationException, RelConversionException {
 		RelNode nonOptimizedPlan = getNonOptimizedRelationalAlgebra(sql);
 		LOGGER.debug("non optimized\n" + RelOptUtil.toString(nonOptimizedPlan, SqlExplainLevel.ALL_ATTRIBUTES));
 
-		RelNode optimizedPlan = getOptimizedRelationalAlgebraCBO(nonOptimizedPlan);
+		RelNode optimizedPlanRBO = getOptimizedRelationalAlgebra(nonOptimizedPlan);
+		LOGGER.debug("rbo optimized\n" + RelOptUtil.toString(optimizedPlanRBO, SqlExplainLevel.ALL_ATTRIBUTES));
+
+		RelNode optimizedPlanCBO = getOptimizedRelationalAlgebraCBOThruRBOOptimized(optimizedPlanRBO);
+		LOGGER.debug("cbo optimized with rbo\n" + RelOptUtil.toString(optimizedPlanCBO, SqlExplainLevel.ALL_ATTRIBUTES));
+
+		return optimizedPlanCBO;
+	}
+
+	/**
+	 * Takes a sql statement and converts it into an optimized relational algebra
+	 * node using CBO Cost Based Optimizer thru {@link org.apache.calcite.plan.volcano.VolcanoPlanner}.
+	 * The result of this function is a physical plan that has been optimized using a cost based optimizer.
+	 *
+	 * @param sql a string sql query that is to be parsed, converted into
+	 *     relational algebra, then optimized
+	 * @return a RelNode which contains the relational algebra tree generated from
+	 *     the sql statement provided after
+	 * 			an optimization step has been completed.
+	 * @throws SqlSyntaxException, SqlValidationException, RelConversionException
+	 */
+	public RelNode
+	getRelationalAlgebraCBOThruNonOptimized(String sql) throws SqlSyntaxException, SqlValidationException, RelConversionException {
+		RelNode nonOptimizedPlan = getNonOptimizedRelationalAlgebra(sql);
+		LOGGER.debug("non optimized\n" + RelOptUtil.toString(nonOptimizedPlan, SqlExplainLevel.ALL_ATTRIBUTES));
+
+		RelNode optimizedPlan = getOptimizedRelationalAlgebraCBOThruNonOptimized(nonOptimizedPlan);
 		LOGGER.debug("cbo optimized\n" + RelOptUtil.toString(optimizedPlan, SqlExplainLevel.ALL_ATTRIBUTES));
 
 		return optimizedPlan;
@@ -390,11 +442,39 @@ public class RelationalAlgebraGenerator {
 	}
 
 	public String
-	getRelationalAlgebraCBOString(String sql) throws SqlSyntaxException, SqlValidationException, RelConversionException {
+	getRelationalAlgebraCBOThruNonOptimizedString(String sql) throws SqlSyntaxException, SqlValidationException, RelConversionException {
 		String response = "";
 
 		try {
-			response = RelOptUtil.toString(getRelationalAlgebraCBO(sql)).replaceAll("Bindable", "Logical").replaceAll("LogicalTableScan", "BindableTableScan");
+			response = RelOptUtil.toString(getRelationalAlgebraCBOThruNonOptimized(sql)).replaceAll("Bindable", "Logical").replaceAll("LogicalTableScan", "BindableTableScan");
+		}catch(SqlValidationException ex){
+			//System.out.println(ex.getMessage());
+			//System.out.println("Found validation err!");
+			throw ex;
+			//return "fail: \n " + ex.getMessage();
+		}catch(SqlSyntaxException ex){
+			//System.out.println(ex.getMessage());
+			//System.out.println("Found syntax err!");
+			throw ex;
+			//return "fail: \n " + ex.getMessage();
+		} catch(Exception ex) {
+			//System.out.println(ex.toString());
+			//System.out.println(ex.getMessage());
+			ex.printStackTrace();
+
+			LOGGER.error(ex.getMessage());
+			return "cbo fail: \n " + ex.getMessage();
+		}
+
+		return response;
+	}
+
+	public String
+	getRelationalAlgebraCBOThruRBOOptimizedString(String sql) throws SqlSyntaxException, SqlValidationException, RelConversionException {
+		String response = "";
+
+		try {
+			response = RelOptUtil.toString(getRelationalAlgebraCBOThruRBOOptimized(sql)).replaceAll("Bindable", "Logical").replaceAll("LogicalTableScan", "BindableTableScan");
 		}catch(SqlValidationException ex){
 			//System.out.println(ex.getMessage());
 			//System.out.println("Found validation err!");
