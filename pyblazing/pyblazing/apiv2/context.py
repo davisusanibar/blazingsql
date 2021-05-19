@@ -1820,6 +1820,7 @@ class BlazingContext(object):
         ----------
 
         sql : string SQL query.
+        optimizer : string to define the optimizer options. These are: RBO (used by default), RBOANDCBO and RBOTHENCBO
         detail : bool to print physical plan
 
         Examples
@@ -1853,7 +1854,9 @@ class BlazingContext(object):
         >>>         FROM taxi_2 as b
         >>>             WHERE b.fare_amount < 100 OR b.passenger_count <> 4
         >>>             '''
-        >>> plan = bc.explain(query, detail=True)
+        >>> plan = bc.explain(query, detail=True) #its using RBO rule based optimzer
+        >>> plan = bc.explain(query, optimizer='RBOANDCBO', detail=True) #its using RBO rule based optimzer + CBO cost based optmizer (rowcount) at the same time
+        >>> plan = bc.explain(query, optimizer='RBOTHENCBO', detail=True) #its using RBO rule based optimzer at firsttime and the use that result as an input to apply CBO cost based optmizer (rowcount) rules
         >>> print(plan) TODO DFR
         LogicalUnion(all=[true])
           LogicalTableScan(table=[[main, taxi_1]])
