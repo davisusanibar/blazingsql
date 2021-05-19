@@ -10,7 +10,7 @@ BOLDGREEN="\e[1;${GREEN}"
 ITALICRED="\e[3;${RED}"
 ENDCOLOR="\e[0m"
 
-RAPIDS_VERSION="0.20"
+RAPIDS_VERSION="21.06"
 CUDA_VERSION="11.0"
 CHANNEL=""
 
@@ -36,7 +36,8 @@ echo -e "${GREEN}Install RAPIDS dependencies${ENDCOLOR}"
 conda install --yes -c rapidsai$CHANNEL -c nvidia -c conda-forge -c defaults dask-cuda=$RAPIDS_VERSION dask-cudf=$RAPIDS_VERSION cudf=$RAPIDS_VERSION ucx-py=$RAPIDS_VERSION ucx-proc=*=gpu cudatoolkit=$CUDA_VERSION
 
 echo -e "${GREEN}Install E2E test dependencies${ENDCOLOR}"
-pip install openpyxl pymysql gitpython pynvml gspread oauth2client
+
+pip install openpyxl pymysql gitpython pynvml gspread oauth2client 'sql-metadata==1.12.0' pyyaml
 
 if [ $? -eq 0 ]; then
   echo -e "${GREEN}Installation complete${ENDCOLOR}"
