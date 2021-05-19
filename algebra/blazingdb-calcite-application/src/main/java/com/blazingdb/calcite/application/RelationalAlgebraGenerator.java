@@ -310,10 +310,10 @@ public class RelationalAlgebraGenerator {
 			}
 		}
 
-		//apply bindable interpreter.
+		//apply bindable interpreter. TODO: Review how to apply only BindableTableScan to mantain Convention.NONE for another operators
 		nonOptimizedPlan = volcanoPlanner.changeTraits(
 				nonOptimizedPlan,
-				nonOptimizedPlan.getCluster().traitSet().replace(BindableConvention.INSTANCE).simplify() //TODO: Review how to apply only BindableTableScan to mantain Convention.NONE for another operators
+				nonOptimizedPlan.getCluster().traitSet().replace(BindableConvention.INSTANCE).simplify()
 		);
 
 		nonOptimizedPlan.getCluster().getPlanner().setRoot(nonOptimizedPlan);
@@ -344,10 +344,10 @@ public class RelationalAlgebraGenerator {
 			}
 		}
 
-		//apply bindable interpreter.
+		//apply bindable interpreter. TODO: Review how to apply only BindableTableScan to mantain Convention.NONE for another operators
 		rboOptimizedPlan = volcanoPlanner.changeTraits(
 				rboOptimizedPlan,
-				rboOptimizedPlan.getCluster().traitSet().replace(BindableConvention.NONE).simplify() //TODO: Review how to apply only BindableTableScan to mantain Convention.NONE for another operators
+				rboOptimizedPlan.getCluster().traitSet().replace(BindableConvention.NONE).simplify()
 		);
 
 		rboOptimizedPlan.getCluster().getPlanner().setRoot(rboOptimizedPlan);
