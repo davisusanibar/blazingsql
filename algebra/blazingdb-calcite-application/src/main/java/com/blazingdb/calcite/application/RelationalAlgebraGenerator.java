@@ -347,7 +347,7 @@ public class RelationalAlgebraGenerator {
 		//apply bindable interpreter. TODO: Review how to apply only BindableTableScan to mantain Convention.NONE for another operators
 		rboOptimizedPlan = volcanoPlanner.changeTraits(
 				rboOptimizedPlan,
-				rboOptimizedPlan.getCluster().traitSet().replace(BindableConvention.NONE).simplify()
+				rboOptimizedPlan.getCluster().traitSet().replace(BindableConvention.INSTANCE).simplify()
 		);
 
 		rboOptimizedPlan.getCluster().getPlanner().setRoot(rboOptimizedPlan);
