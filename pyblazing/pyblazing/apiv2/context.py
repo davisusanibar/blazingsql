@@ -1864,10 +1864,12 @@ class BlazingContext(object):
         """
         self.lock.acquire()
         try:
-            if optimizer == "RBO":
+            if optimizer.upper() == "RBO":
                 algebra = self.generator.getRelationalAlgebraString(sql)
-            else:
-                algebra = self.generator.getRelationalAlgebraCBOString(sql)
+            elif optimizer.upper() == "RBOTHENCBO":
+                algebra = self.generator.getRelationalAlgebraCBOThruRBOOptimizedString(sql)
+            elif optimizer.upper() == "RBOANDCBO":
+                algebra = self.generator.getRelationalAlgebraCBOThruNonOptimizedString(sql)
 
             if detail is True:
                 masterIndex = 0
