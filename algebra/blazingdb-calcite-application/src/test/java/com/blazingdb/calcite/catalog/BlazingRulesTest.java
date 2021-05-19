@@ -191,7 +191,7 @@ public class BlazingRulesTest {
 
 	@Test()
 	public void
-	generateSQLCBOCalciteRulesCalciteTest() throws Exception {
+	generateCBOSQLTest() throws Exception {
 		createTableSchemas();
 
 		db = repo.getDatabase(dbId);
@@ -222,11 +222,16 @@ public class BlazingRulesTest {
 				FilterJoinRule.JoinConditionPushRule.JOIN,
 				ProjectMergeRule.INSTANCE,
 				FilterMergeRule.INSTANCE,
+				ProjectJoinTransposeRule.INSTANCE,
 				//RBO Rules
-				ProjectFilterTransposeRule.INSTANCE,
+				org.apache.calcite.rel.rules.ProjectTableScanRule.INSTANCE, //--> used by cbo
+				org.apache.calcite.rel.rules.ProjectFilterTransposeRule.INSTANCE,
+				//RBO Rules - The following three rules evaluate expressions in Projects and Filters
+				ReduceExpressionsRule.PROJECT_INSTANCE,
 				ReduceExpressionsRule.FILTER_INSTANCE,
-				ProjectTableScanRule.INSTANCE,
-				FilterTableScanRule.INSTANCE,
+				//RBO Rules
+				org.apache.calcite.rel.rules.ProjectTableScanRule.INSTANCE, //--> used by cbo
+				org.apache.calcite.rel.rules.FilterTableScanRule.INSTANCE, //--> used by cbo
 				//RBO Rules
 				FilterRemoveIsNotDistinctFromRule.INSTANCE,
 				AggregateReduceFunctionsRule.INSTANCE
@@ -240,11 +245,39 @@ public class BlazingRulesTest {
 				FilterJoinRule.JoinConditionPushRule.JOIN,
 				ProjectMergeRule.INSTANCE,
 				FilterMergeRule.INSTANCE,
+				ProjectJoinTransposeRule.INSTANCE,
 				//RBO BSQL Custom Rules
+				com.blazingdb.calcite.rules.ProjectTableScanRule.INSTANCE, //--> used by cbo
 				com.blazingdb.calcite.rules.ProjectFilterTransposeRule.INSTANCE,
-				com.blazingdb.calcite.rules.ReduceExpressionsRule.FILTER_INSTANCE,
-				com.blazingdb.calcite.rules.ProjectTableScanRule.INSTANCE,
-				com.blazingdb.calcite.rules.FilterTableScanRule.INSTANCE,
+				//RBO Rules - The following three rules evaluate expressions in Projects and Filters
+				ReduceExpressionsRule.PROJECT_INSTANCE,
+				ReduceExpressionsRule.FILTER_INSTANCE,
+				//RBO BSQL Custom Rules
+				com.blazingdb.calcite.rules.ProjectTableScanRule.INSTANCE, //--> used by cbo
+				com.blazingdb.calcite.rules.FilterTableScanRule.INSTANCE, //--> used by cbo
+				//RBO Rules
+				FilterRemoveIsNotDistinctFromRule.INSTANCE,
+				AggregateReduceFunctionsRule.INSTANCE
+		);
+
+		List<RelOptRule> rulesRBOCustomBlazingForCBO = Arrays.asList(
+				//RBO Rules
+				AggregateExpandDistinctAggregatesRule.JOIN,
+				FilterAggregateTransposeRule.INSTANCE,
+				FilterJoinRule.JoinConditionPushRule.FILTER_ON_JOIN,
+				FilterJoinRule.JoinConditionPushRule.JOIN,
+				ProjectMergeRule.INSTANCE,
+				FilterMergeRule.INSTANCE,
+				ProjectJoinTransposeRule.INSTANCE,
+				//RBO BSQL Custom Rules
+				com.blazingdb.calcite.rules.ProjectTableScanRule.INSTANCE, //--> used by cbo
+				com.blazingdb.calcite.rules.ProjectFilterTransposeRule.INSTANCE,
+				//RBO Rules - The following three rules evaluate expressions in Projects and Filters
+				ReduceExpressionsRule.PROJECT_INSTANCE,
+				ReduceExpressionsRule.FILTER_INSTANCE,
+				//RBO BSQL Custom Rules
+				com.blazingdb.calcite.rules.ProjectTableScanRule.INSTANCE, //--> used by cbo
+				com.blazingdb.calcite.rules.FilterTableScanRule.INSTANCE, //--> used by cbo
 				//RBO Rules
 				FilterRemoveIsNotDistinctFromRule.INSTANCE,
 				AggregateReduceFunctionsRule.INSTANCE
@@ -252,83 +285,94 @@ public class BlazingRulesTest {
 
 		List<RelOptRule> rulesCBO = Arrays.asList(
 				//CBO
-				Bindables.BINDABLE_TABLE_SCAN_RULE,
+				Bindables.BINDABLE_AGGREGATE_RULE,
 				Bindables.BINDABLE_FILTER_RULE,
 				Bindables.BINDABLE_JOIN_RULE,
+				Bindables.BINDABLE_TABLE_SCAN_RULE,
 				Bindables.BINDABLE_PROJECT_RULE,
 				Bindables.BINDABLE_SORT_RULE,
 				JoinAssociateRule.INSTANCE
 		);
 
 		System.out.println("<*****************************************************************************>");
-		String sql =
-				"select l.l_orderkey, l.l_partkey, l.l_suppkey, l.l_linenumber, s.s_address, p.p_brand" +
-						" from lineitem l, supplier s, part p " +
-						" where l.l_suppkey = s.s_suppkey and  l.l_partkey=p.p_partkey";
+		//custom query
+		//String sql = "select p.p_container, p.p_brand, l.l_linenumber, l.l_discount, l.l_shipdate, l.l_orderkey, l.l_partkey, l.l_suppkey, l.l_linenumber as number12, s.s_address as tmp112, p.p_brand as brand12 from lineitem l, supplier s, part p where l.l_suppkey = s.s_suppkey and  l.l_partkey=p.p_partkey order by p.p_container, p.p_brand, l.l_linenumber, l.l_discount, l.l_shipdate, l.l_orderkey, l.l_partkey, l.l_suppkey, l.l_linenumber as number12, s.s_address as tmp112, p.p_brand as brand12";
+
+		//tpch-02:
+		String sql = "select s_acctbal, s_name, n_name, p_partkey, p_mfgr, s_address, s_phone, s_comment from part, supplier, partsupp, nation, region where p_partkey = ps_partkey and s_suppkey = ps_suppkey and p_size = 15 and p_type like '%BRASS' and s_nationkey = n_nationkey and n_regionkey = r_regionkey and r_name = 'EUROPE' and ps_supplycost = ( select min(ps_supplycost) from partsupp, supplier, nation, region where p_partkey = ps_partkey and s_suppkey = ps_suppkey and s_nationkey = n_nationkey and n_regionkey = r_regionkey and r_name = 'EUROPE' ) order by s_acctbal desc, n_name, s_name, p_partkey limit 100";
 
 		System.out.println("<*****************************************************************************>");
 		System.out.println("RelNode default non optimized");
 		RelNode nonOptimizedPlan = algebraGen.getNonOptimizedRelationalAlgebra(sql);
 		System.out.println("non optimized\n");
-		//System.out.println(RelOptUtil.toString(nonOptimizedPlan) + "\n");
-		System.out.println(RelOptUtil.toString(nonOptimizedPlan, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
+		System.out.println(RelOptUtil.toString(nonOptimizedPlan) + "\n");
+//		System.out.println(RelOptUtil.toString(nonOptimizedPlan, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
 
 		//RBO Out of the box
 		System.out.println("<*****************************************************************************>");
 		System.out.println("RelNode rbo optimized out of the box rules");
 		algebraGen.setRules(rulesRBOOutOfTheBox);
 		optimizedPlanRBOOutOfTheBox = algebraGen.getOptimizedRelationalAlgebra(nonOptimizedPlan);
-		//System.out.println(RelOptUtil.toString(optimizedPlanRBOOutOfTheBox) + "\n");
-		System.out.println(RelOptUtil.toString(optimizedPlanRBOOutOfTheBox, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
+		System.out.println(RelOptUtil.toString(optimizedPlanRBOOutOfTheBox) + "\n");
+//		System.out.println(RelOptUtil.toString(optimizedPlanRBOOutOfTheBox, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
 
 		//RBO Custom Blazing
 		System.out.println("<*****************************************************************************>");
 		System.out.println("RelNode rbo optimized custom blazing rules");
+		algebraGen.setRules(null);
 		algebraGen.setRules(rulesRBOCustomBlazing);
+		//algebraGen.setRules(null);
 		optimizedPlanRBOCustomBlazing = algebraGen.getOptimizedRelationalAlgebra(nonOptimizedPlan);
-		//System.out.println(RelOptUtil.toString(optimizedPlanRBOCustomBlazing) + "\n");
-		System.out.println(RelOptUtil.toString(optimizedPlanRBOCustomBlazing, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
+		System.out.println(RelOptUtil.toString(optimizedPlanRBOCustomBlazing) + "\n");
+//		System.out.println(RelOptUtil.toString(optimizedPlanRBOCustomBlazing, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
 
 		//CBO using: RBO Non Optimized + RBO Out Of The Box + CBO
 		System.out.println("<*****************************************************************************>");
 		System.out.println("RelNode cbo thru non optimized + rbo optimized out of the box rules + cb0 rules");
-		algebraGen.setRules(rulesRBOOutOfTheBox);
+		algebraGen.setRules(null);
+		algebraGen.setRules(rulesRBOCustomBlazingForCBO);
+		algebraGen.setRulesCBO(null);
 		algebraGen.setRulesCBO(rulesCBO);
 		optimizedPlanCBOThruNoOptimizedAndRBOOutOfTheBox = algebraGen.getOptimizedRelationalAlgebraCBOThruNonOptimized(nonOptimizedPlan);
-		//System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOutOfTheBox) + "\n");
-		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOutOfTheBox, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
+		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOutOfTheBox) + "\n");
+//		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOutOfTheBox, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
 
 		//CBO using: RBO Non Optimized + RBO custom blazing + CBO
 		System.out.println("<*****************************************************************************>");
 		System.out.println("RelNode cbo thru non optimized + rbo optimized custom blazing rules + cb0 rules");
-		algebraGen.setRules(rulesRBOOutOfTheBox);
+		algebraGen.setRules(null);
+		algebraGen.setRules(rulesRBOCustomBlazingForCBO);
+		algebraGen.setRulesCBO(null);
 		algebraGen.setRulesCBO(rulesCBO);
 		optimizedPlanCBOThruNoOptimizedAndRBOOCustomBlazing = algebraGen.getOptimizedRelationalAlgebraCBOThruNonOptimized(nonOptimizedPlan);
-		//System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOCustomBlazing) + "\n");
-		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOCustomBlazing, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
+		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOCustomBlazing) + "\n");
+//		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOCustomBlazing, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
 
 		//CBO using: RBO Optimized out of the box
 		System.out.println("<*****************************************************************************>");
 		System.out.println("RelNode cbo thru rbo optimized out of the box rules");
+		algebraGen.setRules(null);
 		algebraGen.setRules(rulesRBOOutOfTheBox);
+		algebraGen.setRulesCBO(null);
 		algebraGen.setRulesCBO(rulesCBO);
 		optimizedPlanCBOThruOptimizedPlanRBOOutOfTheBox = algebraGen.getOptimizedRelationalAlgebraCBOThruRBOOptimized(optimizedPlanRBOOutOfTheBox);
-		//System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOOutOfTheBox) + "\n");
-		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOOutOfTheBox, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
+		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOOutOfTheBox) + "\n");
+//		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOOutOfTheBox, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
 
 		//CBO using: RBO Optimized custom blazing
 		System.out.println("<*****************************************************************************>");
 		System.out.println("RelNode cbo thru rbo optimized blazing custom rules");
+		algebraGen.setRules(null);
 		algebraGen.setRules(rulesRBOCustomBlazing);
+		algebraGen.setRulesCBO(null);
 		algebraGen.setRulesCBO(rulesCBO);
 		optimizedPlanCBOThruOptimizedPlanRBOCustomBlazing = algebraGen.getOptimizedRelationalAlgebraCBOThruRBOOptimized(optimizedPlanRBOCustomBlazing);
-		//System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOCustomBlazing) + "\n");
-		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOCustomBlazing, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
+		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOCustomBlazing) + "\n");
+//		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOCustomBlazing, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
 
 		System.out.println("<*****************************************************************************>");
 
 		assert true;
-
 	}
 
 	@Test()
@@ -516,10 +560,9 @@ public class BlazingRulesTest {
 		softAssert.assertAll();
 	}
 
-	// When enabled, this unit test compares for all TPCH queries, the current optimized logical plans versus the last reference plans
 	@Test(enabled = true)
 	public void
-	checkPhysicalTPCHPlanTest() throws Exception {
+	validateCBOTPCHPlanTest() throws Exception {
 
 		createTableSchemas();
 		db = repo.getDatabase(dbId);
@@ -542,40 +585,54 @@ public class BlazingRulesTest {
 			RelNode optimizedPlanCBOThruNoOptimizedAndRBOOutOfTheBox;
 			RelNode optimizedPlanCBOThruNoOptimizedAndRBOOCustomBlazing;
 
+			System.out.println("<*****************************************************************************>");
+			System.out.println("RelNode default non optimized");
 			RelNode nonOptimizedPlan = algebraGen.getNonOptimizedRelationalAlgebra(sql);
 			System.out.println("non optimized\n");
-			//System.out.println(RelOptUtil.toString(nonOptimizedPlan) + "\n");
-			System.out.println(RelOptUtil.toString(nonOptimizedPlan, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
+			System.out.println(RelOptUtil.toString(nonOptimizedPlan) + "\n");
+//			System.out.println(RelOptUtil.toString(nonOptimizedPlan, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
 
 			//RBO Out of the box
+			System.out.println("<*****************************************************************************>");
+			System.out.println("RelNode rbo optimized out of the box rules");
 			optimizedPlanRBOOutOfTheBox = algebraGen.getOptimizedRelationalAlgebra(nonOptimizedPlan);
-			//System.out.println(RelOptUtil.toString(optimizedPlanRBOOutOfTheBox) + "\n");
-			System.out.println(RelOptUtil.toString(optimizedPlanRBOOutOfTheBox, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
+			System.out.println(RelOptUtil.toString(optimizedPlanRBOOutOfTheBox) + "\n");
+//			System.out.println(RelOptUtil.toString(optimizedPlanRBOOutOfTheBox, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
 
 			//RBO Custom Blazing
+			System.out.println("<*****************************************************************************>");
+			System.out.println("RelNode rbo optimized custom blazing rules");
 			optimizedPlanRBOCustomBlazing = algebraGen.getOptimizedRelationalAlgebra(nonOptimizedPlan);
-			//System.out.println(RelOptUtil.toString(optimizedPlanRBOCustomBlazing) + "\n");
-			System.out.println(RelOptUtil.toString(optimizedPlanRBOCustomBlazing, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
+			System.out.println(RelOptUtil.toString(optimizedPlanRBOCustomBlazing) + "\n");
+//			System.out.println(RelOptUtil.toString(optimizedPlanRBOCustomBlazing, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
 
 			//CBO using: RBO Non Optimized + RBO Out Of The Box + CBO
+			System.out.println("<*****************************************************************************>");
+			System.out.println("RelNode cbo thru non optimized + rbo optimized out of the box rules + cb0 rules");
 			optimizedPlanCBOThruNoOptimizedAndRBOOutOfTheBox = algebraGen.getOptimizedRelationalAlgebraCBOThruNonOptimized(nonOptimizedPlan);
-			//System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOutOfTheBox) + "\n");
-			System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOutOfTheBox, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
+			System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOutOfTheBox) + "\n");
+//			System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOutOfTheBox, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
 
-			//CBO using: RBO Non Optimized + RBO Out Of The Box + CBO
+			//CBO using: RBO Non Optimized + RBO custom blazing + CBO
+			System.out.println("<*****************************************************************************>");
+			System.out.println("RelNode cbo thru non optimized + rbo optimized custom blazing rules + cb0 rules");
 			optimizedPlanCBOThruNoOptimizedAndRBOOCustomBlazing = algebraGen.getOptimizedRelationalAlgebraCBOThruNonOptimized(nonOptimizedPlan);
-			//System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOCustomBlazing) + "\n");
-			System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOCustomBlazing, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
+			System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOCustomBlazing) + "\n");
+//			System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOCustomBlazing, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
 
 			//CBO using: RBO Optimized out of the box
+			System.out.println("<*****************************************************************************>");
+			System.out.println("RelNode cbo thru rbo optimized out of the box rules");
 			optimizedPlanCBOThruOptimizedPlanRBOOutOfTheBox = algebraGen.getOptimizedRelationalAlgebraCBOThruRBOOptimized(optimizedPlanRBOOutOfTheBox);
-			//System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOOutOfTheBox) + "\n");
-			System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOOutOfTheBox, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
+			System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOOutOfTheBox) + "\n");
+//			System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOOutOfTheBox, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
 
 			//CBO using: RBO Optimized custom blazing
+			System.out.println("<*****************************************************************************>");
+			System.out.println("RelNode cbo thru rbo optimized blazing custom rules");
 			optimizedPlanCBOThruOptimizedPlanRBOCustomBlazing = algebraGen.getOptimizedRelationalAlgebraCBOThruRBOOptimized(optimizedPlanRBOCustomBlazing);
-			//System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOCustomBlazing) + "\n");
-			System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOCustomBlazing, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
+			System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOCustomBlazing) + "\n");
+//			System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOCustomBlazing, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
 		}
 
 		in.close();

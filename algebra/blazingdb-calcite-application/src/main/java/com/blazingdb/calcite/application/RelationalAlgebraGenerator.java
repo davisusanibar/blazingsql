@@ -17,15 +17,15 @@ import org.apache.calcite.interpreter.InterpretableRel;
 import org.apache.calcite.jdbc.CalciteConnection;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
-import org.apache.calcite.plan.RelOptRule;
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.plan.*;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.prepare.CalciteCatalogReader;
+import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.logical.LogicalTableScan;
 import org.apache.calcite.rel.rules.*;
 import org.apache.calcite.rex.RexExecutorImpl;
 import org.apache.calcite.rel.type.RelDataTypeSystem;
@@ -246,7 +246,9 @@ public class RelationalAlgebraGenerator {
 	getOptimizedRelationalAlgebraCBOThruNonOptimized(RelNode nonOptimizedPlan) throws RelConversionException {
 		VolcanoPlanner volcanoPlanner = (VolcanoPlanner) nonOptimizedPlan.getCluster().getPlanner();
 		volcanoPlanner.clear();
+		volcanoPlanner.setNoneConventionHasInfiniteCost(false);
 
+		//Consider: Volcano advances based on the cost and may not even apply all rules while the HepPlanner exhaustively executes all matching rules till a fixpoint.
 		if(rules == null){
 			if (RelOptUtil.toString(nonOptimizedPlan).indexOf("OVER") != -1) {
 				//RBO Rules
@@ -258,7 +260,9 @@ public class RelationalAlgebraGenerator {
 				volcanoPlanner.addRule(FilterMergeRule.INSTANCE);
 				//RBO BSQL Custom Rules
 				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ProjectFilterTransposeRule.INSTANCE);
-				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ReduceExpressionsRule.FILTER_INSTANCE);
+				//RBO Rules
+				volcanoPlanner.addRule(ReduceExpressionsRule.FILTER_INSTANCE);
+				//RBO BSQL Custom Rules
 				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ProjectTableScanRule.INSTANCE);
 				volcanoPlanner.addRule(com.blazingdb.calcite.rules.FilterTableScanRule.INSTANCE);
 				//RBO Rules
@@ -272,12 +276,14 @@ public class RelationalAlgebraGenerator {
 				volcanoPlanner.addRule(FilterJoinRule.JoinConditionPushRule.JOIN);
 				volcanoPlanner.addRule(ProjectMergeRule.INSTANCE);
 				volcanoPlanner.addRule(FilterMergeRule.INSTANCE);
+				volcanoPlanner.addRule(ProjectJoinTransposeRule.INSTANCE);
 				//RBO BSQL Custom Rules
-				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ProjectJoinTransposeRule.INSTANCE);
 				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ProjectTableScanRule.INSTANCE);
 				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ProjectFilterTransposeRule.INSTANCE);
-				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ReduceExpressionsRule.PROJECT_INSTANCE);
-				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ReduceExpressionsRule.FILTER_INSTANCE);
+				//RBO Rules
+				volcanoPlanner.addRule(ReduceExpressionsRule.PROJECT_INSTANCE);
+				volcanoPlanner.addRule(ReduceExpressionsRule.FILTER_INSTANCE);
+				//RBO BSQL Custom Rules
 				volcanoPlanner.addRule(com.blazingdb.calcite.rules.ProjectTableScanRule.INSTANCE);
 				volcanoPlanner.addRule(com.blazingdb.calcite.rules.FilterTableScanRule.INSTANCE);
 				//RBO Rules
@@ -304,8 +310,12 @@ public class RelationalAlgebraGenerator {
 			}
 		}
 
-		nonOptimizedPlan = volcanoPlanner.changeTraits(nonOptimizedPlan, nonOptimizedPlan.getCluster().traitSet().replace(BindableConvention.INSTANCE));
-		//nonOptimizedPlan = plvolcanoPlanneranner.changeTraits(nonOptimizedPlan, nonOptimizedPlan.getCluster().traitSet().replace(EnumerableConvention.INSTANCE));
+		//apply bindable interpreter.
+		nonOptimizedPlan = volcanoPlanner.changeTraits(
+				nonOptimizedPlan,
+				nonOptimizedPlan.getCluster().traitSet().replace(BindableConvention.INSTANCE).simplify() //TODO: Review how to apply only BindableTableScan to mantain Convention.NONE for another operators
+		);
+
 		nonOptimizedPlan.getCluster().getPlanner().setRoot(nonOptimizedPlan);
 
 		planner.close(); //to prevent error like: cannot move to STATE_2_READY from STATE_5_CONVERTED
@@ -317,7 +327,9 @@ public class RelationalAlgebraGenerator {
 	getOptimizedRelationalAlgebraCBOThruRBOOptimized(RelNode rboOptimizedPlan) throws RelConversionException {
 		VolcanoPlanner volcanoPlanner = (VolcanoPlanner) rboOptimizedPlan.getCluster().getPlanner();
 		volcanoPlanner.clear();
+		volcanoPlanner.setNoneConventionHasInfiniteCost(false);
 
+		//Consider: Volcano advances based on the cost and may not even apply all rules while the HepPlanner exhaustively executes all matching rules till a fixpoint.
 		if(rulesCBO == null){
 			volcanoPlanner.addRule(Bindables.BINDABLE_AGGREGATE_RULE);
 			volcanoPlanner.addRule(Bindables.BINDABLE_FILTER_RULE);
@@ -332,8 +344,12 @@ public class RelationalAlgebraGenerator {
 			}
 		}
 
-		rboOptimizedPlan = volcanoPlanner.changeTraits(rboOptimizedPlan, rboOptimizedPlan.getCluster().traitSet().replace(BindableConvention.INSTANCE));
-		//rboOptimizedPlan = volcanoPlanner.changeTraits(rboOptimizedPlan, rboOptimizedPlan.getCluster().traitSet().replace(EnumerableConvention.INSTANCE));
+		//apply bindable interpreter.
+		rboOptimizedPlan = volcanoPlanner.changeTraits(
+				rboOptimizedPlan,
+				rboOptimizedPlan.getCluster().traitSet().replace(BindableConvention.NONE).simplify() //TODO: Review how to apply only BindableTableScan to mantain Convention.NONE for another operators
+		);
+
 		rboOptimizedPlan.getCluster().getPlanner().setRoot(rboOptimizedPlan);
 
 		planner.close(); //to prevent error like: cannot move to STATE_2_READY from STATE_5_CONVERTED
@@ -446,7 +462,7 @@ public class RelationalAlgebraGenerator {
 		String response = "";
 
 		try {
-			response = RelOptUtil.toString(getRelationalAlgebraCBOThruNonOptimized(sql)).replaceAll("Bindable", "Logical").replaceAll("LogicalTableScan", "BindableTableScan");
+			response = RelOptUtil.toString(getRelationalAlgebraCBOThruNonOptimized(sql)).replaceAll("Bindable", "Logical").replaceAll("LogicalTableScan", "BindableTableScan"); //TODO: This is a workaround to test CBO rules. Currently only BindableTableScan is supporting by the engine.
 		}catch(SqlValidationException ex){
 			//System.out.println(ex.getMessage());
 			//System.out.println("Found validation err!");
@@ -474,7 +490,7 @@ public class RelationalAlgebraGenerator {
 		String response = "";
 
 		try {
-			response = RelOptUtil.toString(getRelationalAlgebraCBOThruRBOOptimized(sql)).replaceAll("Bindable", "Logical").replaceAll("LogicalTableScan", "BindableTableScan");
+			response = RelOptUtil.toString(getRelationalAlgebraCBOThruRBOOptimized(sql)).replaceAll("Bindable", "Logical").replaceAll("LogicalTableScan", "BindableTableScan"); 			//FIXME!: This is a workaround to test CBO rules. Curently only BindableTableScan is supporting by the engine. TODO: Implement bindable interpreter on the engine.
 		}catch(SqlValidationException ex){
 			//System.out.println(ex.getMessage());
 			//System.out.println("Found validation err!");
