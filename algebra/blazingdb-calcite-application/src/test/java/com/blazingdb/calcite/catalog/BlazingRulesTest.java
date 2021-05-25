@@ -405,8 +405,7 @@ public class BlazingRulesTest {
 		RelationalAlgebraGenerator algebraGen = new RelationalAlgebraGenerator(schema);
 
 		//tpch-04
-//		String sql = "select o.o_orderpriority, count(*) as order_count from orders o where o.o_orderdate >= date '1993-07-01'and o.o_orderdate < date '1993-07-01' + interval '3' month and exists (select * from lineitem l where l.l_orderkey = o.o_orderkey and l.l_commitdate < l.l_receiptdate ) group by o.o_orderpriority order by o.o_orderpriority";
-		String sql = "select\n" +
+		String fromTPCH = "select\n" +
 				"                o.o_orderpriority,\n" +
 				"                count(*) as order_count\n" +
 				"            from\n" +
@@ -427,8 +426,32 @@ public class BlazingRulesTest {
 				"                o.o_orderpriority\n" +
 				"            order by\n" +
 				"                o.o_orderpriority";
-		String result = algebraGen.getRelationalAlgebraCBOThruNonOptimizedString(sql);
-		System.out.println(result);
+
+		String sql1 = "SELECT o.o_orderpriority,\n" +
+				"       Count(*) AS order_count\n" +
+				"FROM   orders o\n" +
+				"WHERE  o.o_orderdate >= DATE '1993-07-01'\n" +
+				"       AND o.o_orderdate < DATE '1993-07-01' + interval '3' month\n" +
+				"       AND EXISTS (SELECT *\n" +
+				"                   FROM   lineitem l\n" +
+				"                   WHERE  l.l_orderkey = o.o_orderkey\n" +
+				"                          AND l.l_commitdate < l.l_receiptdate)\n" +
+				"GROUP  BY o.o_orderpriority\n" +
+				"ORDER  BY o.o_orderpriority ";
+
+
+		String sql = "select c.c_custkey, c.c_name, sum(l.l_extendedprice * (1 - l.l_discount)) as revenue, c.c_acctbal, n.n_name, c.c_address, c.c_phone, c.c_comment from customer c inner join orders o on c.c_custkey = o.o_custkey inner join lineitem l on l.l_orderkey = o.o_orderkey inner join nation n on c.c_nationkey = n.n_nationkey where o.o_orderdate >= date '1993-10-01'and o.o_orderdate < date '1993-10-01'and l.l_returnflag = 'R'group by c.c_custkey, c.c_name, c.c_acctbal, c.c_phone, n.n_name, c.c_address, c.c_comment order by revenue desc, c.c_custkey limit 20";
+
+		String rboandsql = "select o.o_orderpriority, count(*) as order_count from orders o where o.o_orderdate >= date '1993-07-01'and o.o_orderdate < date '1993-07-01' + interval '3' month and exists (select * from lineitem l where l.l_orderkey = o.o_orderkey and l.l_commitdate < l.l_receiptdate ) group by o.o_orderpriority order by o.o_orderpriority";
+		System.out.println("******* PLAN RBO *******");
+		String resultRBO = algebraGen.getRelationalAlgebraString(sql1);
+		System.out.println(resultRBO);
+		System.out.println("******* PLAN RBO AND CBO *******");
+		String resultRBOANDCBO = algebraGen.getRelationalAlgebraCBOThruNonOptimizedString(sql1);
+		System.out.println(resultRBOANDCBO);
+		System.out.println("******* PLAN RBO THEN CBO *******");
+		String resultRBOTHENCBO = algebraGen.getRelationalAlgebraCBOThruRBOOptimizedString(sql1);
+		System.out.println(resultRBOTHENCBO);
 	}
 
 	@Test()
