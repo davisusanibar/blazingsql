@@ -1886,13 +1886,13 @@ class BlazingContext(object):
         self.lock.acquire()
         try:
             if optimizer.upper() == "RBO":
-                print('rules in action')
+                print('SQL explain optimizer thru ' + optimizer)
                 algebra = self.generator.getRelationalAlgebraString(sql)
             elif optimizer.upper() == "RBOTHENCBO":
-                print('rules and then cost in action')
+                print('SQL explain optimizer thru ' + optimizer)
                 algebra = self.generator.getRelationalAlgebraCBOThruRBOOptimizedString(sql)
             elif optimizer.upper() == "RBOANDCBO":
-                print('rules and cost together in action')
+                print('SQL explain optimizer thru ' + optimizer)
                 algebra = self.generator.getRelationalAlgebraCBOThruNonOptimizedString(sql)
 
             if detail is True:
@@ -3093,7 +3093,7 @@ class BlazingContext(object):
         fileTypes = []
 
         if algebra is None:
-            print('SQL thru ' + optimizer)
+            print('SQL optimizer thru ' + optimizer)
             algebra = self.explain(query, optimizer=optimizer)
 
         # when an empty `LogicalValues` appears on the optimized plan
