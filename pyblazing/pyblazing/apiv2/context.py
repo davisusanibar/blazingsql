@@ -1812,7 +1812,7 @@ class BlazingContext(object):
 
     # BEGIN SQL interface
 
-    def explain(self, sql, optimizer="RBO", detail=False):
+    def explain(self, sql, detail=False, optimizer: str = "RBO"):
         """
         Returns break down of a given query's Logical Relational Algebra plan.
 
@@ -1868,10 +1868,13 @@ class BlazingContext(object):
         self.lock.acquire()
         try:
             if optimizer.upper() == "RBO":
+                print('rules in action')
                 algebra = self.generator.getRelationalAlgebraString(sql)
             elif optimizer.upper() == "RBOTHENCBO":
+                print('rules and then cost in action')
                 algebra = self.generator.getRelationalAlgebraCBOThruRBOOptimizedString(sql)
             elif optimizer.upper() == "RBOANDCBO":
+                print('rules and cost together in action')
                 algebra = self.generator.getRelationalAlgebraCBOThruNonOptimizedString(sql)
 
             if detail is True:
@@ -3004,7 +3007,7 @@ class BlazingContext(object):
         return self._get_results_distributed(token)
 
     def sql(
-        self, query, optimizer="RBO", algebra=None, config_options={}, return_token: bool = False,
+        self, query, algebra=None, config_options={}, return_token: bool = False, optimizer: str = "RBO",
     ):
         """
         Query a BlazingSQL table.
@@ -3072,6 +3075,7 @@ class BlazingContext(object):
         fileTypes = []
 
         if algebra is None:
+            print('SQL thru ' + optimizer)
             algebra = self.explain(query, optimizer)
 
         # when an empty `LogicalValues` appears on the optimized plan
