@@ -3094,7 +3094,7 @@ class BlazingContext(object):
 
         if algebra is None:
             print('SQL thru ' + optimizer)
-            algebra = self.explain(query, optimizer)
+            algebra = self.explain(query, optimizer=optimizer)
 
         # when an empty `LogicalValues` appears on the optimized plan
         # there aren't neither BindableTableScan nor TableScan nor Project
