@@ -102,7 +102,7 @@ public class BlazingRulesTest {
 						new SimpleEntry<>("n_regionkey", CatalogColumnDataType.INT32),
 						new SimpleEntry<>("n_comment", CatalogColumnDataType.STRING)));
 
-		mapRowCOunt.put("orders", 40);
+		mapRowCOunt.put("orders", 400000000);
 		map.put("orders",
 				Arrays.asList(new SimpleEntry<>("o_orderkey", CatalogColumnDataType.INT64),
 						new SimpleEntry<>("o_custkey", CatalogColumnDataType.INT32),
@@ -300,12 +300,14 @@ public class BlazingRulesTest {
 		System.out.println("<*****************************************************************************>");
 		//custom query
 		//String sql = "select p.p_container, p.p_brand, l.l_linenumber, l.l_discount, l.l_shipdate, l.l_orderkey, l.l_partkey, l.l_suppkey, l.l_linenumber as number12, s.s_address as tmp112, p.p_brand as brand12 from lineitem l, supplier s, part p where l.l_suppkey = s.s_suppkey and  l.l_partkey=p.p_partkey order by p.p_container, p.p_brand, l.l_linenumber, l.l_discount, l.l_shipdate, l.l_orderkey, l.l_partkey, l.l_suppkey, l.l_linenumber as number12, s.s_address as tmp112, p.p_brand as brand12";
-
 		//tpch-02:
-//		String sql = "select s_acctbal, s_name, n_name, p_partkey, p_mfgr, s_address, s_phone, s_comment from part, supplier, partsupp, nation, region where p_partkey = ps_partkey and s_suppkey = ps_suppkey and p_size = 15 and p_type like '%BRASS' and s_nationkey = n_nationkey and n_regionkey = r_regionkey and r_name = 'EUROPE' and ps_supplycost = ( select min(ps_supplycost) from partsupp, supplier, nation, region where p_partkey = ps_partkey and s_suppkey = ps_suppkey and s_nationkey = n_nationkey and n_regionkey = r_regionkey and r_name = 'EUROPE' ) order by s_acctbal desc, n_name, s_name, p_partkey limit 100";
+		//String sql = "select s_acctbal, s_name, n_name, p_partkey, p_mfgr, s_address, s_phone, s_comment from part, supplier, partsupp, nation, region where p_partkey = ps_partkey and s_suppkey = ps_suppkey and p_size = 15 and p_type like '%BRASS' and s_nationkey = n_nationkey and n_regionkey = r_regionkey and r_name = 'EUROPE' and ps_supplycost = ( select min(ps_supplycost) from partsupp, supplier, nation, region where p_partkey = ps_partkey and s_suppkey = ps_suppkey and s_nationkey = n_nationkey and n_regionkey = r_regionkey and r_name = 'EUROPE' ) order by s_acctbal desc, n_name, s_name, p_partkey limit 100";
 		//tpch-04
-		String sql = "select o.o_orderpriority, count(*) as order_count from orders o where o.o_orderdate >= date '1993-07-01'and o.o_orderdate < date '1993-07-01' + interval '3' month and exists (select * from lineitem l where l.l_orderkey = o.o_orderkey and l.l_commitdate < l.l_receiptdate ) group by o.o_orderpriority order by o.o_orderpriority";
-
+		//String sql = "select o.o_orderpriority, count(*) as order_count from orders o where o.o_orderdate >= date '1993-07-01'and o.o_orderdate < date '1993-07-01' + interval '3' month and exists (select * from lineitem l where l.l_orderkey = o.o_orderkey and l.l_commitdate < l.l_receiptdate ) group by o.o_orderpriority order by o.o_orderpriority";
+		//tpch-01
+		//String sql = "select l_returnflag, l_linestatus, sum(l_quantity) as sum_qty, sum(l_extendedprice) as sum_base_price, sum(l_extendedprice*(1-l_discount)) as sum_disc_price, sum(l_extendedprice*(1-l_discount)*(1+l_tax)) as sum_charge, avg(l_quantity) as avg_qty, avg(l_extendedprice) as avg_price, avg(l_discount) as avg_disc, count(*) as count_order from lineitem where l_shipdate <= date '1998-12-01' - interval '90' day group by l_returnflag, l_linestatus order by l_returnflag, l_linestatus";
+		//tpch-03
+		String sql = "select c.c_custkey, c.c_name, sum(l.l_extendedprice * (1 - l.l_discount)) as revenue, c.c_acctbal, n.n_name, c.c_address, c.c_phone, c.c_comment from customer c inner join orders o on c.c_custkey = o.o_custkey inner join lineitem l on l.l_orderkey = o.o_orderkey inner join nation n on c.c_nationkey = n.n_nationkey where o.o_orderdate >= date '1993-10-01'and o.o_orderdate < date '1993-10-01' + interval '3' month and l.l_returnflag = 'R'group by c.c_custkey, c.c_name, c.c_acctbal, c.c_phone, n.n_name, c.c_address, c.c_comment order by revenue desc, c.c_custkey limit 20";
 		System.out.println("<*****************************************************************************>");
 		System.out.println("RelNode default non optimized");
 		RelNode nonOptimizedPlan = algebraGen.getNonOptimizedRelationalAlgebra(sql);
@@ -335,9 +337,9 @@ public class BlazingRulesTest {
 		System.out.println("<*****************************************************************************>");
 		System.out.println("RelNode cbo thru non optimized + rbo optimized out of the box rules + cb0 rules");
 		algebraGen.setRules(null);
-		algebraGen.setRules(rulesRBOCustomBlazingForCBO);
+//		algebraGen.setRules(rulesRBOCustomBlazingForCBO);
 		algebraGen.setRulesCBO(null);
-		algebraGen.setRulesCBO(rulesCBO);
+//		algebraGen.setRulesCBO(rulesCBO);
 		optimizedPlanCBOThruNoOptimizedAndRBOOutOfTheBox = algebraGen.getOptimizedRelationalAlgebraCBOThruNonOptimized(nonOptimizedPlan);
 		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOutOfTheBox) + "\n");
 //		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOutOfTheBox, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
@@ -346,9 +348,9 @@ public class BlazingRulesTest {
 		System.out.println("<*****************************************************************************>");
 		System.out.println("RelNode cbo thru non optimized + rbo optimized custom blazing rules + cb0 rules");
 		algebraGen.setRules(null);
-		algebraGen.setRules(rulesRBOCustomBlazingForCBO);
+//		algebraGen.setRules(rulesRBOCustomBlazingForCBO);
 		algebraGen.setRulesCBO(null);
-		algebraGen.setRulesCBO(rulesCBO);
+//		algebraGen.setRulesCBO(rulesCBO);
 		optimizedPlanCBOThruNoOptimizedAndRBOOCustomBlazing = algebraGen.getOptimizedRelationalAlgebraCBOThruNonOptimized(nonOptimizedPlan);
 		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOCustomBlazing) + "\n");
 //		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruNoOptimizedAndRBOOCustomBlazing, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
@@ -357,9 +359,9 @@ public class BlazingRulesTest {
 		System.out.println("<*****************************************************************************>");
 		System.out.println("RelNode cbo thru rbo optimized out of the box rules");
 		algebraGen.setRules(null);
-		algebraGen.setRules(rulesRBOOutOfTheBox);
+//		algebraGen.setRules(rulesRBOOutOfTheBox);
 		algebraGen.setRulesCBO(null);
-		algebraGen.setRulesCBO(rulesCBO);
+//		algebraGen.setRulesCBO(rulesCBO);
 		optimizedPlanCBOThruOptimizedPlanRBOOutOfTheBox = algebraGen.getOptimizedRelationalAlgebraCBOThruRBOOptimized(optimizedPlanRBOOutOfTheBox);
 		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOOutOfTheBox) + "\n");
 //		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOOutOfTheBox, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
@@ -368,14 +370,17 @@ public class BlazingRulesTest {
 		System.out.println("<*****************************************************************************>");
 		System.out.println("RelNode cbo thru rbo optimized blazing custom rules");
 		algebraGen.setRules(null);
-		algebraGen.setRules(rulesRBOCustomBlazing);
+//		algebraGen.setRules(rulesRBOCustomBlazing);
 		algebraGen.setRulesCBO(null);
-		algebraGen.setRulesCBO(rulesCBO);
+//		algebraGen.setRulesCBO(rulesCBO);
 		optimizedPlanCBOThruOptimizedPlanRBOCustomBlazing = algebraGen.getOptimizedRelationalAlgebraCBOThruRBOOptimized(optimizedPlanRBOCustomBlazing);
 		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOCustomBlazing) + "\n");
 //		System.out.println(RelOptUtil.toString(optimizedPlanCBOThruOptimizedPlanRBOCustomBlazing, SqlExplainLevel.ALL_ATTRIBUTES) + "\n");
 
 		System.out.println("<*****************************************************************************>");
+
+		System.out.println("Python invoke for RBOANDCBO");
+		System.out.println(algebraGen.getRelationalAlgebraCBOThruNonOptimizedString(sql));
 
 		assert true;
 	}
@@ -395,62 +400,23 @@ public class BlazingRulesTest {
 		checkTable(schema, "part");
 		checkTable(schema, "supplier");
 
-		RelNode optimizedPlanRBOOutOfTheBox;
-		RelNode optimizedPlanRBOCustomBlazing;
-		RelNode optimizedPlanCBOThruOptimizedPlanRBOOutOfTheBox;
-		RelNode optimizedPlanCBOThruOptimizedPlanRBOCustomBlazing;
-		RelNode optimizedPlanCBOThruNoOptimizedAndRBOOutOfTheBox;
-		RelNode optimizedPlanCBOThruNoOptimizedAndRBOOCustomBlazing;
-
 		RelationalAlgebraGenerator algebraGen = new RelationalAlgebraGenerator(schema);
 
-		//tpch-04
-		String fromTPCH = "select\n" +
-				"                o.o_orderpriority,\n" +
-				"                count(*) as order_count\n" +
-				"            from\n" +
-				"                orders o\n" +
-				"            where\n" +
-				"                o.o_orderdate >= date '1993-07-01'\n" +
-				"                and o.o_orderdate < date '1993-07-01' + interval '3' month\n" +
-				"                and exists (\n" +
-				"                    select\n" +
-				"                        *\n" +
-				"                    from\n" +
-				"                        lineitem l\n" +
-				"                    where\n" +
-				"                        l.l_orderkey = o.o_orderkey\n" +
-				"                        and l.l_commitdate < l.l_receiptdate\n" +
-				"                    )\n" +
-				"            group by\n" +
-				"                o.o_orderpriority\n" +
-				"            order by\n" +
-				"                o.o_orderpriority";
+		//tpch-02
+		String sql = "select c.c_custkey, c.c_name, sum(l.l_extendedprice * (1 - l.l_discount)) as revenue, c.c_acctbal, n.n_name, c.c_address, c.c_phone, c.c_comment from customer c inner join orders o on c.c_custkey = o.o_custkey inner join lineitem l on l.l_orderkey = o.o_orderkey inner join nation n on c.c_nationkey = n.n_nationkey where o.o_orderdate >= date '1993-10-01'and o.o_orderdate < date '1993-10-01' + interval '3' month and l.l_returnflag = 'R'group by c.c_custkey, c.c_name, c.c_acctbal, c.c_phone, n.n_name, c.c_address, c.c_comment order by revenue desc, c.c_custkey limit 20";
 
-		String sql1 = "SELECT o.o_orderpriority,\n" +
-				"       Count(*) AS order_count\n" +
-				"FROM   orders o\n" +
-				"WHERE  o.o_orderdate >= DATE '1993-07-01'\n" +
-				"       AND o.o_orderdate < DATE '1993-07-01' + interval '3' month\n" +
-				"       AND EXISTS (SELECT *\n" +
-				"                   FROM   lineitem l\n" +
-				"                   WHERE  l.l_orderkey = o.o_orderkey\n" +
-				"                          AND l.l_commitdate < l.l_receiptdate)\n" +
-				"GROUP  BY o.o_orderpriority\n" +
-				"ORDER  BY o.o_orderpriority ";
-
-
-		String sql = "select c.c_custkey, c.c_name, sum(l.l_extendedprice * (1 - l.l_discount)) as revenue, c.c_acctbal, n.n_name, c.c_address, c.c_phone, c.c_comment from customer c inner join orders o on c.c_custkey = o.o_custkey inner join lineitem l on l.l_orderkey = o.o_orderkey inner join nation n on c.c_nationkey = n.n_nationkey where o.o_orderdate >= date '1993-10-01'and o.o_orderdate < date '1993-10-01'and l.l_returnflag = 'R'group by c.c_custkey, c.c_name, c.c_acctbal, c.c_phone, n.n_name, c.c_address, c.c_comment order by revenue desc, c.c_custkey limit 20";
-
-		String rboandsql = "select o.o_orderpriority, count(*) as order_count from orders o where o.o_orderdate >= date '1993-07-01'and o.o_orderdate < date '1993-07-01' + interval '3' month and exists (select * from lineitem l where l.l_orderkey = o.o_orderkey and l.l_commitdate < l.l_receiptdate ) group by o.o_orderpriority order by o.o_orderpriority";
 		System.out.println("******* PLAN RBO *******");
-		String resultRBO = algebraGen.getRelationalAlgebraString(sql1);
+		String resultRBO = algebraGen.getRelationalAlgebraString(sql);
 		System.out.println(resultRBO);
+
 		System.out.println("******* PLAN RBO AND CBO *******");
-		String resultRBOANDCBO = algebraGen.getRelationalAlgebraCBOThruNonOptimizedString(sql1);
+		algebraGen = new RelationalAlgebraGenerator(schema);
+		String resultRBOANDCBO = algebraGen.getRelationalAlgebraCBOThruNonOptimizedString(sql);
 		System.out.println(resultRBOANDCBO);
+
 		System.out.println("******* PLAN RBO THEN CBO *******");
-		String resultRBOTHENCBO = algebraGen.getRelationalAlgebraCBOThruRBOOptimizedString(sql1);
+		algebraGen = new RelationalAlgebraGenerator(schema);
+		String resultRBOTHENCBO = algebraGen.getRelationalAlgebraCBOThruRBOOptimizedString(sql);
 		System.out.println(resultRBOTHENCBO);
 	}
 

@@ -312,6 +312,8 @@ public class RelationalAlgebraGenerator {
 		//TODO: Review how to apply only BindableTableScan to mantain Convention.NONE for another operators (applying bindable interpreter)
 		nonOptimizedPlan = volcanoPlanner.changeTraits(nonOptimizedPlan, nonOptimizedPlan.getCluster().traitSet().replace(BindableConvention.INSTANCE));
 
+		nonOptimizedPlan.getCluster().getPlanner().setExecutor(new RexExecutorImpl(null)); //Help us to solve this problem "Operations between literals is not supported". Without this change, filter appear in this form --> filters=[[AND(>=($2, 1993-10-01 00:00:00), <($2, CAST(+(1993-10-01, 3:INTERVAL MONTH)):TIMESTAMP(0) NOT NULL))]]
+
 		nonOptimizedPlan.getCluster().getPlanner().setRoot(nonOptimizedPlan);
 
 		planner.close(); //to prevent error like: cannot move to STATE_2_READY from STATE_5_CONVERTED
@@ -341,6 +343,8 @@ public class RelationalAlgebraGenerator {
 		}
 		//TODO: Review how to apply only BindableTableScan to mantain Convention.NONE for another operators (applying bindable interpreter)
 		rboOptimizedPlan = volcanoPlanner.changeTraits(rboOptimizedPlan, rboOptimizedPlan.getCluster().traitSet().replace(BindableConvention.INSTANCE));
+
+		rboOptimizedPlan.getCluster().getPlanner().setExecutor(new RexExecutorImpl(null)); //Help us to solve this problem "Operations between literals is not supported". Without this change, filter appear in this form --> filters=[[AND(>=($2, 1993-10-01 00:00:00), <($2, CAST(+(1993-10-01, 3:INTERVAL MONTH)):TIMESTAMP(0) NOT NULL))]]
 
 		rboOptimizedPlan.getCluster().getPlanner().setRoot(rboOptimizedPlan);
 
@@ -411,6 +415,32 @@ public class RelationalAlgebraGenerator {
 	 * @throws SqlSyntaxException, SqlValidationException, RelConversionException
 	 */
 	public RelNode
+	getRelationalAlgebraCBOAllThruRBOOptimized(String sql) throws SqlSyntaxException, SqlValidationException, RelConversionException {
+		RelNode nonOptimizedPlan = getNonOptimizedRelationalAlgebra(sql);
+		LOGGER.debug("non optimized\n" + RelOptUtil.toString(nonOptimizedPlan, SqlExplainLevel.ALL_ATTRIBUTES));
+
+//		RelNode optimizedPlanRBO = getOptimizedRelationalAlgebra(nonOptimizedPlan);
+//		LOGGER.debug("rbo optimized\n" + RelOptUtil.toString(optimizedPlanRBO, SqlExplainLevel.ALL_ATTRIBUTES));
+
+		RelNode optimizedPlanCBO = getOptimizedRelationalAlgebraCBOThruNonOptimized(nonOptimizedPlan);
+		LOGGER.debug("cbo optimized with rbo for rbo optimized \n" + RelOptUtil.toString(optimizedPlanCBO, SqlExplainLevel.ALL_ATTRIBUTES));
+
+		return optimizedPlanCBO;
+	}
+
+	/**
+	 * Takes a sql statement and converts it into an optimized relational algebra
+	 * node using CBO Cost Based Optimizer thru {@link org.apache.calcite.plan.volcano.VolcanoPlanner}.
+	 * The result of this function is a physical plan that has been optimized using a cost based optimizer.
+	 *
+	 * @param sql a string sql query that is to be parsed, converted into
+	 *     relational algebra, then optimized
+	 * @return a RelNode which contains the relational algebra tree generated from
+	 *     the sql statement provided after
+	 * 			an optimization step has been completed.
+	 * @throws SqlSyntaxException, SqlValidationException, RelConversionException
+	 */
+	public RelNode
 	getRelationalAlgebraCBOThruNonOptimized(String sql) throws SqlSyntaxException, SqlValidationException, RelConversionException {
 		RelNode nonOptimizedPlan = getNonOptimizedRelationalAlgebra(sql);
 		LOGGER.debug("non optimized\n" + RelOptUtil.toString(nonOptimizedPlan, SqlExplainLevel.ALL_ATTRIBUTES));
@@ -454,7 +484,7 @@ public class RelationalAlgebraGenerator {
 		String response = "";
 
 		try {
-			response = RelOptUtil.toString(getRelationalAlgebraCBOThruNonOptimized(sql)).replaceAll("Bindable", "Logical").replaceAll("LogicalTableScan", "BindableTableScan"); //TODO: This is a workaround to test CBO rules. Currently only BindableTableScan is supporting by the engine.
+			response = (RelOptUtil.toString(getRelationalAlgebraCBOThruNonOptimized(sql))).replaceAll("Bindable", "Logical").replaceAll("LogicalTableScan", "BindableTableScan"); //TODO: This is a workaround to test CBO rules. Currently only BindableTableScan is supporting by the engine.
 		}catch(SqlValidationException ex){
 			//System.out.println(ex.getMessage());
 			//System.out.println("Found validation err!");
