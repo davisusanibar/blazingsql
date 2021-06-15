@@ -1838,7 +1838,7 @@ class BlazingContext(object):
         ----------
 
         sql : string SQL query.
-        optimizer : string to define the optimizer options. These are: RBO (used by default), RBOANDCBO and RBOTHENCBO
+        optimizer : string to define the optimizer options. These are: RBO (used by default), CBO and RBOTHENCBO
         detail : bool to print physical plan
 
         Examples
@@ -1873,8 +1873,8 @@ class BlazingContext(object):
         >>>             WHERE b.fare_amount < 100 OR b.passenger_count <> 4
         >>>             '''
         >>> plan = bc.explain(query, detail=True) #its using RBO rule based optimzer
-        >>> plan = bc.explain(query, optimizer='RBOANDCBO', detail=True) #its using RBO rule based optimzer + CBO cost based optmizer (rowcount) at the same time
-        >>> plan = bc.explain(query, optimizer='RBOTHENCBO', detail=True) #its using RBO rule based optimzer at firsttime and the use that result as an input to apply CBO cost based optmizer (rowcount) rules
+        >>> plan = bc.explain(query, optimizer='CBO', detail=True) #its using CBO cost based optmizer (rowcount)
+        >>> plan = bc.explain(query, optimizer='RBOTHENCBO', detail=True) #its using RBO rule based optimizer at firsttime and then use that result as an input to apply CBO cost based optmizer (rowcount) rules
         >>> print(plan) TODO DFR
         LogicalUnion(all=[true])
           LogicalTableScan(table=[[main, taxi_1]])
@@ -1891,7 +1891,7 @@ class BlazingContext(object):
             elif optimizer.upper() == "RBOTHENCBO":
                 print('SQL explain optimizer thru ' + optimizer)
                 algebra = self.generator.getRelationalAlgebraCBOThruRBOOptimizedString(sql)
-            elif optimizer.upper() == "RBOANDCBO":
+            elif optimizer.upper() == "CBO":
                 print('SQL explain optimizer thru ' + optimizer)
                 algebra = self.generator.getRelationalAlgebraCBOThruNonOptimizedString(sql)
 
